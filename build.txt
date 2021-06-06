@@ -1,0 +1,4 @@
+displayName = Realms Test
+author = SuperAndyHero
+version = 0.1
+modReferences = SubworldLibrary
