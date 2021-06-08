@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using System.IO;
 using Terraria;
+using Terraria.ModLoader;
 
 namespace Realms
 {
@@ -18,8 +19,10 @@ namespace Realms
 					effect.Texture = texture;
 				}
 		}
-		public static void SetTexture(this Model model, string texture) =>
-			SetTexture(model, ContentHandler.GetTexture(texture));
+		public static void SetXnaTexture(this Model model, string texture) =>
+			SetTexture(model, ContentHandler.GetXnaTexture(texture));
+		public static void SetModTexture(this Model model, string texture) =>
+			SetTexture(model, ModContent.GetTexture(texture));
 
 		public static void SetAlpha(this Model model, float alpha)
 		{
@@ -28,29 +31,85 @@ namespace Realms
 					effect.Alpha = alpha;
 		}
 
-		public static void LightColors(this Model model, Color ambient, Color diffuse, Color emissive) =>
-			LightColors(model, ambient.ToVector3(), diffuse.ToVector3(), emissive.ToVector3());
-		public static void LightColors(this Model model, Vector3 ambient, Vector3 diffuse, Vector3 emissive = default)
+		public static void DirectionalLight0(this Model model, bool enabled, Vector3 direction, Color diffuseColor = default, Color specularColor = default) =>
+			DirectionalLight0(model, enabled, direction, diffuseColor.ToVector3(), specularColor.ToVector3());
+		public static void DirectionalLight0(this Model model, bool enabled, Vector3 direction = default, Vector3 diffuseColor = default, Vector3 specularColor = default)
 		{
 			foreach (ModelMesh mesh in model.Meshes)
 				foreach (BasicEffect effect in mesh.Effects)
 				{
-					effect.AmbientLightColor = ambient;
-					effect.DiffuseColor = diffuse;
-					effect.EmissiveColor = emissive;
+					effect.DirectionalLight0.Enabled = enabled;
+					effect.DirectionalLight0.Direction = Vector3.Normalize(direction);
+					effect.DirectionalLight0.DiffuseColor = diffuseColor;
+					effect.DirectionalLight0.SpecularColor = specularColor;
 				}
 		}
 
-		public static void Specular(this Model model, Color color, float power)
-		{
-			Specular(model, color.ToVector3(), power);
-		}
-		public static void Specular(this Model model, Vector3 color, float power)
+		public static void DirectionalLight1(this Model model, bool enabled, Vector3 direction, Color diffuseColor = default, Color specularColor = default) =>
+			DirectionalLight1(model, enabled, direction, diffuseColor.ToVector3(), specularColor.ToVector3());
+		public static void DirectionalLight1(this Model model, bool enabled, Vector3 direction = default, Vector3 diffuseColor = default, Vector3 specularColor = default)
 		{
 			foreach (ModelMesh mesh in model.Meshes)
 				foreach (BasicEffect effect in mesh.Effects)
 				{
-					effect.SpecularColor = color;
+					effect.DirectionalLight1.Enabled = enabled;
+					effect.DirectionalLight1.Direction = Vector3.Normalize(direction);
+					effect.DirectionalLight1.DiffuseColor = diffuseColor;
+					effect.DirectionalLight1.SpecularColor = specularColor;
+				}
+		}
+
+		public static void DirectionalLight2(this Model model, bool enabled, Vector3 direction, Color diffuseColor = default, Color specularColor = default) =>
+			DirectionalLight2(model, enabled, direction, diffuseColor.ToVector3(), specularColor.ToVector3());
+		public static void DirectionalLight2(this Model model, bool enabled, Vector3 direction = default, Vector3 diffuseColor = default, Vector3 specularColor = default)
+		{
+			foreach (ModelMesh mesh in model.Meshes)
+				foreach (BasicEffect effect in mesh.Effects)
+				{
+					effect.DirectionalLight2.Enabled = enabled;
+					effect.DirectionalLight2.Direction = Vector3.Normalize(direction);
+					effect.DirectionalLight2.DiffuseColor = diffuseColor;
+					effect.DirectionalLight2.SpecularColor = specularColor;
+				}
+		}
+
+		public static void AmbientColor(this Model model, Color ambient) =>
+			AmbientColor(model, ambient.ToVector3());
+		public static void AmbientColor(this Model model, Vector3 ambient)
+		{
+			foreach (ModelMesh mesh in model.Meshes)
+				foreach (BasicEffect effect in mesh.Effects)
+					effect.AmbientLightColor = ambient;
+		}
+
+		public static void DiffuseColor(this Model model, Color diffuse = default) =>
+			DiffuseColor(model, diffuse.ToVector3());
+		public static void DiffuseColor(this Model model, Vector3 diffuse = default)
+		{
+			foreach (ModelMesh mesh in model.Meshes)
+				foreach (BasicEffect effect in mesh.Effects)
+					effect.DiffuseColor = diffuse;
+		}
+
+		public static void EmissiveColor(this Model model, Color emissive = default) =>
+			EmissiveColor(model, emissive.ToVector3());
+		public static void EmissiveColor(this Model model, Vector3 emissive = default)
+		{
+			foreach (ModelMesh mesh in model.Meshes)
+				foreach (BasicEffect effect in mesh.Effects)
+					effect.EmissiveColor = emissive;
+		}
+
+		public static void Specular(this Model model, float power) =>
+			Specular(model, power, Vector3.One);
+		public static void Specular(this Model model, float power, Color filterColor) =>
+			Specular(model, power, filterColor.ToVector3());
+		public static void Specular(this Model model, float power, Vector3 filterColor)
+		{
+			foreach (ModelMesh mesh in model.Meshes)
+				foreach (BasicEffect effect in mesh.Effects)
+                {
+					effect.SpecularColor = filterColor;
 					effect.SpecularPower = power;
 				}
 		}
@@ -67,12 +126,12 @@ namespace Realms
 						effect.EnableDefaultLighting();
 				}
 		}
-		public static void DrawBoundingBox(this Model model, SpriteBatch spriteBatch, Color color, float scale = 1)
+		public static void DrawBoundingBox(this Model model, SpriteBatch spriteBatch, Vector2 position, Color color, float scale = 1)
 		{
 			foreach (ModelMesh mesh in model.Meshes)
 			{
 				Vector3 size = new Vector3(new Vector2(mesh.BoundingSphere.Radius) * Main.GameViewMatrix.Zoom * scale, 0);
-				Vector3 topLeft = (((mesh.Effects[0] as BasicEffect).World.Translation - (mesh.BoundingSphere.Center * size)) - new Vector3(size.X, -size.Y, 0)) - new Vector3(Main.screenPosition, 0);
+				Vector3 topLeft = ((new Vector3(position, 0) - (mesh.BoundingSphere.Center * size)) - new Vector3(size.X, -size.Y, 0)) - new Vector3(Main.screenPosition, 0);
 				spriteBatch.Draw(Main.blackTileTexture, new Rectangle((int)topLeft.X, (int)topLeft.Y, (int)size.X * 2, (int)size.Y * 2), color);
 			}
 		}

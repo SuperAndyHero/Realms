@@ -65,7 +65,7 @@ namespace Realms
 			}
 		}
 
-		public static Texture2D GetTexture(string path)
+		public static Texture2D GetXnaTexture(string path)
 		{
 			if (assetCache.ContainsKey(path))
 				return (Texture2D)assetCache[path];

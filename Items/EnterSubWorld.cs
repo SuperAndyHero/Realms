@@ -41,22 +41,16 @@ namespace Realms.Items
 
         public override void PostDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
         {
-            //Vector3 modelPos = new Vector3((Main.LocalPlayer.Center + new Vector2(0, Main.LocalPlayer.gfxOffY)), 0);
-            //Vector2 camPos = (Main.screenPosition + (Main.ViewSize / 2) + new Vector2(0, Main.ViewSize.Y * (Main.GameViewMatrix.Zoom.Y - 1))) * new Vector2(1, -1);
-            Model model = GetModel("Realms/Models/Sans");
+            Model model = GetModel("Realms/Models/LargeAsteroid_flat");
+            model.SetModTexture("Realms/Models/AsteroidTexture");
+            model.LightingSetting(true, true);
+            model.Specular(10);
 
-
-
-            //model.SetAlpha(0.4f);
-            //model.SetMatrix(Matrix.CreateScale(modelScale) * Matrix.CreateFromYawPitchRoll(Main.GameUpdateCount / 15f, 0, 0) * Matrix.CreateTranslation(modelPos * new Vector3(1, -1, 1)),
-            //    Matrix.CreateLookAt(new Vector3(camPos, 500), new Vector3(camPos, 0), Vector3.UnitY) * Main.GameViewMatrix.ZoomMatrix,
-            //    Matrix.CreateOrthographic(Main.screenWidth, Main.screenHeight, 0, 1000));
-            //ModContent.GetInstance<Realms>().model.Center();
-            model.Draw(Main.LocalPlayer.Center + new Vector2(0, Main.LocalPlayer.gfxOffY), 50, (float)Main.GameUpdateCount / 15);
-            model.DrawBoundingBox(spriteBatch, Color.Purple * 0.25f, 50);
-
-            //Matrix.CreatePerspectiveFieldOfView((float)Math.PI / 2f, Main.ViewSize.X / Main.ViewSize.Y, 1, 1000));
-            //Matrix.CreateLookAt(new Vector3(0, 0, 383), new Vector3(0, 0, 0), Vector3.UnitY),
+            Vector3 dir = ModelHandler.LightingDirection(Main.LocalPlayer.Center, out Vector3 averageColor, 72, 8, 0.5f);
+            model.AmbientColor(averageColor * 0.25f);
+            model.DirectionalLight0(true, dir, averageColor / 4, averageColor);
+            model.Draw(Main.LocalPlayer.Center + new Vector2(0, Main.LocalPlayer.gfxOffY), 50, (float)Main.GameUpdateCount / 50);
+            //model.DrawBoundingBox(spriteBatch, Main.LocalPlayer.Center + new Vector2(0, Main.LocalPlayer.gfxOffY), Color.Purple * 0.25f, 50);
         }
 
         public override bool UseItem(Player player)
