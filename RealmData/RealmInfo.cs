@@ -12,17 +12,19 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Drawing;
 using Microsoft.Xna.Framework;
 using Terraria.DataStructures;
+using System.Text;
 
 namespace Realms.RealmData
 {
     public class RealmInfo
     {
-        int Width;
-        int Height;
-        string DisplayName;
-        int Seed;
+        public int Width;
+        public int Height;
+        public string DisplayName;
+        public int Seed;
+        public string RealmID;
 
-        public RealmInfo(int width, int height, string displayName, int seed = 0)
+        public RealmInfo(int width, int height, string displayName, List<RealmEffect> effectList, List<RealmFeature> featureList, int seed = 0)
         {
             Width = width;
             Height = height;
@@ -34,10 +36,21 @@ namespace Realms.RealmData
             }
             else
                 Seed = seed;
+
+            realmEffectList = effectList;
+            realmFeatureList = featureList;
+            Main.NewText("New realm info initalized");
         }
 
-        public List<RealmEffect> realmEffects;
-        public List<RealmFeature> realmFeatures;
 
+        public List<RealmEffect> realmEffectList;
+        public List<RealmFeature> realmFeatureList;
+
+        public void CreateId()
+        {
+            byte[] idComination = Encoding.ASCII.GetBytes(Width + Height + DisplayName + Seed + realmEffectList.Count + realmFeatureList.Count);
+            RealmID = Convert.ToBase64String(idComination);
+            Main.NewText("Id Created");
+        }
     }
 }

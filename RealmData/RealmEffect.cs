@@ -26,21 +26,22 @@ namespace Realms.RealmData
         public WorldLocation location;
         public virtual RealmEffectType EffectType => RealmEffectType.Misc;
 
-        public RealmEffect(WorldLocation Location = null)
+        public RealmEffect Setup(WorldLocation Location = null)
         {
             location = Location ?? new WorldLocation();
+            return this;
         }
 
         public virtual void Update()
         {
             if (location.LocationValid((int)Main.LocalPlayer.position.X / 16, (int)Main.LocalPlayer.position.Y / 16))
-                UpdateInRange();
+                PlayerUpdateInRange();
         }
 
         /// <summary>
-        /// only runs if player location is valid, is not called is Update() is overridden
+        /// only runs if world location is valid, is not called if Update() is overridden
         /// </summary>
-        public virtual void UpdateInRange()
+        public virtual void PlayerUpdateInRange()
         {
 
         }
@@ -82,6 +83,16 @@ namespace Realms.RealmData
         public virtual void ModifyList(List<RealmEffect> effectList)
         {
 
+        }
+    }
+
+    public abstract class PotionRealmEffect : RealmEffect
+    {
+        public override RealmEffectType EffectType => RealmEffectType.Potion;
+        public virtual int BuffType => 0;
+        public override void PlayerUpdateInRange()
+        {
+            Main.LocalPlayer.AddBuff(BuffType, 1, true);
         }
     }
 }

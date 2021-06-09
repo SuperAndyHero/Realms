@@ -21,6 +21,5 @@
   <ItemGroup>
     <Folder Include="RealmData\BlockPatterns\" />
     <Folder Include="RealmData\WorldLocations\" />
-    <Folder Include="RealmData\RealmEffects\" />
   </ItemGroup>
 </Project>

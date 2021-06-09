@@ -28,7 +28,7 @@ namespace Realms.RealmData
         #region fields
         public int[] TileTypes;
         public WorldLocation Location;
-        public readonly BlockPattern Pattern;
+        public BlockPattern Pattern;
         public RealmRarity Rarity;
         public RealmSize Size;
         public RealmFrequency Frequency;
@@ -39,7 +39,7 @@ namespace Realms.RealmData
         /// <summary>
         /// Float that takes into account rarity. Is the input to ShouldPlace.
         /// </summary>
-        private readonly float PlaceChance = 0;
+        private float PlaceChance = 0;
         #endregion
 
         #region properies
@@ -75,7 +75,7 @@ namespace Realms.RealmData
         public virtual string GenerateMessage => "Filling World";
         #endregion
 
-        public RealmFeature(int[] tileTypes = null, WorldLocation location = null, BlockPattern pattern = null, RealmRarity rarity = RealmRarity.Normal, RealmSize size = RealmSize.Normal, RealmFrequency frequency = RealmFrequency.Normal)
+        public RealmFeature Setup(int[] tileTypes = null, WorldLocation location = null, BlockPattern pattern = null, RealmRarity rarity = RealmRarity.Normal, RealmSize size = RealmSize.Normal, RealmFrequency frequency = RealmFrequency.Normal)
         {
             TileTypes = tileTypes ?? new int[] { 0 };
             Pattern = pattern ?? new BlockPattern();
@@ -84,6 +84,7 @@ namespace Realms.RealmData
             Size = size;
             Frequency = frequency;
             PlaceChance = RealmHelper.WorldScaleChance(PrecentChance * RarityMult);
+            return this;
         }
 
         public virtual void Generate(GenerationProgress progress)
