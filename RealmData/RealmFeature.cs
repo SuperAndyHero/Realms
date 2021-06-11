@@ -32,24 +32,32 @@ namespace Realms.RealmData
         public RealmRarity Rarity;
         public RealmSize Size;
         public RealmFrequency Frequency;
+
         /// <summary>
         /// A center-point for patterns, set this if any patterns should center around a custom point
         /// </summary>
         protected Point16 center = Point16.Zero;
         /// <summary>
-        /// Float that takes into account rarity. Is the input to ShouldPlace.
+        /// (1 in this) chance that takes into account rarity. Is the input to ShouldPlace.
         /// </summary>
-        private float PlaceChance = 0;
+        private int placeChanceNormal = 0;
+        //private float placeChanceScaled = 0;
         #endregion
 
         #region properies
         /// <summary>
-        /// Should be used for block placing, takes into account both PrecentChance adjusted for world size and RarityMult
+        /// Should be used for block placing, takes into account both PrecentChance adjusted for RarityMult
+        /// Not set if Generate is overridden
         /// </summary>
-        public bool ShouldPlace => WorldGen.genRand.NextFloat(PlaceChance) < 1f;
-        public float RarityMult => (int)Rarity * 0.01f;
-        public float SizeMult => (int)Size * 0.01f;
-        public float FrequencyMult => (int)Frequency * 0.01f;
+        protected bool ShouldPlaceNormal => WorldGen.genRand.Next(placeChanceNormal) < 1;
+        /// <summary>
+        /// Should be used for block placing, takes into account both PrecentChance adjusted for world size and RarityMult
+        /// Not set if Generate is overridden
+        /// </summary>
+       // protected bool ShouldPlaceScaled => WorldGen.genRand.NextFloat(1) < placeChanceScaled;
+        protected float RarityMult => (int)Rarity * 0.01f;
+        protected float SizeMult => (int)Size * 0.01f;
+        protected float FrequencyMult => (int)Frequency * 0.01f;
         /// <summary>
         /// Should be used for block type, this takes into account the tileList, the pattern, and if set the center
         /// </summary>
@@ -62,42 +70,46 @@ namespace Realms.RealmData
 
         #region virtual properties
         /// <summary>
-        /// input chance, the output that takes rarity into account is 'PlaceChance'
-        /// </summary>
-        public virtual float PrecentChance => 100f;
-        /// <summary>
         /// What type of feature is this, this is used for type caps and sorting
         /// </summary>
         public virtual RealmFeatureType FeatureType => RealmFeatureType.Misc;
         /// <summary>
+        /// input chance, the output that takes rarity into account is 'PlaceChance'
+        /// </summary>
+        protected virtual float PrecentChance => 100f;
+        /// <summary>
         /// Worldgen screen message
         /// </summary>
-        public virtual string GenerateMessage => "Filling World";
+        protected virtual string GenerateMessage => "Filling World";
         #endregion
 
         public RealmFeature Setup(int[] tileTypes = null, WorldLocation location = null, BlockPattern pattern = null, RealmRarity rarity = RealmRarity.Normal, RealmSize size = RealmSize.Normal, RealmFrequency frequency = RealmFrequency.Normal)
         {
-            TileTypes = tileTypes ?? new int[] { 0 };
-            Pattern = pattern ?? new BlockPattern();
-            Location = location ?? new WorldLocation();
-            Rarity = rarity;
-            Size = size;
-            Frequency = frequency;
-            PlaceChance = RealmHelper.WorldScaleChance(PrecentChance * RarityMult);
+            TileTypes = tileTypes ?? new int[] { 0 };//save
+            Pattern = pattern ?? new BlockPattern();//save
+            Location = location ?? new WorldLocation();//save
+            Rarity = rarity;//save
+            Size = size;//save
+            Frequency = frequency;//save
+            placeChanceNormal = (int)(100f / (PrecentChance * RarityMult));//deterministic
             return this;
         }
 
         public virtual void Generate(GenerationProgress progress)
         {
+            //placeChanceScaled = RealmHelper.WorldScaleChance(PrecentChance * RarityMult);//deterministic
+
             progress.Message = GenerateMessage;
             center = Location.Center;
 
             Rectangle area = Location.CoverageArea;
-
             for (int i = area.X; i < area.Width; i++)
+            {
+                //progress.CurrentPassWeight = ((float)i / (float)area.Width);
                 for (int j = area.Y; j < area.Height; j++)
-                    if(Location.LocationValid(i, j))
+                    if (Location.LocationValid(i, j))
                         IterateValidZone(i, j);
+            }
         }
 
         /// <summary>
@@ -107,7 +119,7 @@ namespace Realms.RealmData
         /// <param name="j"></param>
         protected virtual void IterateValidZone(int i, int j)
         {
-            if(ShouldPlace)
+            if(ShouldPlaceScaled)
                 WorldGen.PlaceTile(i, j, TileType(i, j), true, true);
         }
 
@@ -122,6 +134,7 @@ namespace Realms.RealmData
 
         /// <summary>
         /// for sorting this feature after others, or moving/removing conflicting features
+        /// called when the parent realm info is first compiled
         /// </summary>
         /// <param name="featureList"></param>
         public virtual void ModifyList(List<RealmFeature> featureList)

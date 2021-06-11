@@ -40,8 +40,6 @@ namespace Realms.Items
 
         public override bool UseItem(Player player)
         {
-            WorldWidth = 600;
-            WorldHeight = 400;
             return true;
         }
     }

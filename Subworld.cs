@@ -8,66 +8,84 @@ using Terraria;
 using System.Reflection;
 using Terraria.ModLoader.IO;
 using static Realms.SubworldHandler;
+using Realms.RealmData;
 
 namespace Realms
 {
-    public static class SubworldHandler
+    public static class SubworldHandler 
     {
+        public static MethodInfo[] asd = typeof(SLWorld).GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
         public static MethodInfo LoadWorldFile = typeof(SLWorld).GetMethod("LoadWorldFile", BindingFlags.NonPublic | BindingFlags.Static);
-
         public static string MainworldName;
-        public static string CurrentSubworldName;//filename
+        public static bool enteringWorld;
+        //public static string CurrentSubworldName;//filename
         public static string SubworldFolderPath => Main.WorldPath + "\\Subworlds\\" + MainworldName + "\\Realms\\";
-        public static string CurrentSubworldPath => SubworldFolderPath + CurrentSubworldName;
+        /// <summary>
+        /// Only call this is there is an active realm with a generated ID
+        /// </summary>
+        public static string CurrentSubworldPath => SubworldFolderPath + activeRealm.DisplayName + "_" + activeRealm.RealmID + ".wld";
 
-        public static int WorldWidth;
-        public static int WorldHeight;
-        public static int WorldSeed;
+        public static RealmInfo activeRealm;
+
+        public static void Enter(RealmInfo enterRealmInfo)
+        {
+            if (!SLWorld.subworld)
+            {
+                MainworldName = Main.ActiveWorldFileData.GetFileName(false);
+            }
+            activeRealm = enterRealmInfo;
+            if (string.IsNullOrEmpty(activeRealm.RealmID))
+                activeRealm.CreateId();
+            //Main.NewText("Entered subworld");
+            Subworld.Enter<Realm>();
+            enteringWorld = false;
+        }
+
+
+        public static bool DebugNoSave = false;
     }
 
     public class RealmsWorld : ModWorld
     {
-        public override void Initialize()
+        public override void PreUpdate()
         {
-            if (!Subworld.AnyActive<Realms>())//SLworld.subworld (bool)?//or store it before enter is called
-                MainworldName = Main.ActiveWorldFileData.GetFileName(false);
-            int a = 1;
-        }
-
-        public override void Load(TagCompound tag)
-        {
-            int b = 2;
-            
+            if(activeRealm != null)
+                foreach (RealmEffect realmEffect in activeRealm.realmEffectList)
+                    realmEffect.Update();
         }
     }
 
-    public class RealmSubworld : Subworld
+    public class Realm : Subworld
     {
         public override bool saveSubworld
         {
             get
             {
-                if (AnyActive<Realms>())
-                    return true;
-                else
+                if (DebugNoSave)
                     return false;
+                enteringWorld = !enteringWorld && MainworldName != Main.ActiveWorldFileData.GetFileName(false);
+                return enteringWorld;
             }
         }
         public override bool saveModData => true;
 
         public override bool noWorldUpdate => false;
-        public override int width => 500;// WorldWidth;
-        public override int height => 500;// WorldHeight;
+        public override int width => activeRealm.Width;// WorldWidth;
+        public override int height => activeRealm.Height;// WorldHeight;
 
-        public override List<GenPass> tasks => new List<GenPass>() { new SubworldGenPass(GenMethod) };//do get gere, and run the loading code when it grabs it and then check before returning list
+        public override List<GenPass> tasks => new List<GenPass>() { new SubworldGenPass(GenMethod) };//do gen here, and run the loading code when it grabs it and then check before returning list
 
-        public void GenMethod(GenerationProgress gen)//todo see above
+        public void GenMethod(GenerationProgress genMessage)//todo see above
         {
             LoadWorldFile.Invoke(ModContent.GetInstance<SLWorld>(), new object[] { (CurrentSubworldPath), false });
-            if(SubworldHandler.CurrentSubworldPath == Main.ActiveWorldFileData.Path)
+            if(CurrentSubworldPath != Main.ActiveWorldFileData.Path)
             {
-
+                foreach(RealmFeature feature in activeRealm.realmFeatureList)
+                {
+                    feature.Generate(genMessage);
+                }
             }
+            Main.ActiveWorldFileData = new Terraria.IO.WorldFileData(CurrentSubworldPath, false);
         }
 
         //public override void OnVotedFor() => StartTeleportSequence();
@@ -79,7 +97,10 @@ namespace Realms
         }
         public override void Unload()
         {
-            Main.ActiveWorldFileData = new Terraria.IO.WorldFileData(SubworldHandler.CurrentSubworldPath, false);
+            //saving
+            //if (SLWorld.subworld)
+            //    Main.ActiveWorldFileData = new Terraria.IO.WorldFileData(CurrentSubworldPath, false);
+            //enteringWorld = false;
         }
     }
 }

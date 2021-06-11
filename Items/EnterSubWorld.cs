@@ -39,6 +39,7 @@ namespace Realms.Items
             model.SetModTexture("Realms/Models/AsteroidTexture");
             model.LightingSetting(true, true);
             model.Specular(10);
+            model.SetAlpha(0.5f);
 
             Vector3 dir = ModelHandler.LightingDirection(Main.LocalPlayer.Center, out Vector3 averageColor, 72, 8, 0.5f);
             model.AmbientColor(averageColor * 0.25f);
@@ -51,7 +52,7 @@ namespace Realms.Items
         {
             //TeleportHandler.InitiateTeleportEvent();
 
-            Subworld.Enter<RealmSubworld>(false);
+            Subworld.Enter<Realm>(false);
 
             //if (Subworld.IsActive<Ship.ShipSubworld>())
             //{

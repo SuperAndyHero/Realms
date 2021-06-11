@@ -23,25 +23,25 @@ namespace Realms.RealmData
 
     public class RealmEffect
     {
-        public WorldLocation location;
+        public WorldLocation Location;
         public virtual RealmEffectType EffectType => RealmEffectType.Misc;
 
-        public RealmEffect Setup(WorldLocation Location = null)
+        public RealmEffect Setup(WorldLocation location = null)
         {
-            location = Location ?? new WorldLocation();
+            Location = location ?? new WorldLocation();
             return this;
         }
 
         public virtual void Update()
         {
-            if (location.LocationValid((int)Main.LocalPlayer.position.X / 16, (int)Main.LocalPlayer.position.Y / 16))
+            if (Location.LocationValid((int)Main.LocalPlayer.position.X / 16, (int)Main.LocalPlayer.position.Y / 16))
                 PlayerUpdateInRange();
         }
 
         /// <summary>
         /// only runs if world location is valid, is not called if Update() is overridden
         /// </summary>
-        public virtual void PlayerUpdateInRange()
+        protected virtual void PlayerUpdateInRange()
         {
 
         }
@@ -49,15 +49,15 @@ namespace Realms.RealmData
         /// <summary>
         /// precent chance that a random update will occur
         /// </summary>
-        public virtual float RandomUpdateChance => 0;
+        protected virtual float RandomUpdateChance => 0;
         /// <summary>
         /// precent coverage of a random update
         /// </summary>
-        public virtual float RandomUpdateCoverage => 5;
+        protected virtual float RandomUpdateCoverage => 5;
 
         public virtual void RandomUpdate(int i, int j)
         {
-            if (location.LocationValid(i, j))
+            if (Location.LocationValid(i, j))
                 RandomUpdateInRange(i, j);
         }
 
@@ -66,7 +66,7 @@ namespace Realms.RealmData
         /// </summary>
         /// <param name="i"></param>
         /// <param name="j"></param>
-        public virtual void RandomUpdateInRange(int i, int j)
+        protected virtual void RandomUpdateInRange(int i, int j)
         {
 
         }
@@ -90,7 +90,7 @@ namespace Realms.RealmData
     {
         public override RealmEffectType EffectType => RealmEffectType.Potion;
         public virtual int BuffType => 0;
-        public override void PlayerUpdateInRange()
+        protected override void PlayerUpdateInRange()
         {
             Main.LocalPlayer.AddBuff(BuffType, 1, true);
         }
