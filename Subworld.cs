@@ -45,7 +45,7 @@ namespace Realms
         public static bool DebugNoSave = false;
     }
 
-    public class RealmsWorld : ModWorld
+    public class SubworldWorld : ModWorld
     {
         public override void PreUpdate()
         {

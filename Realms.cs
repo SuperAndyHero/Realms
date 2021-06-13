@@ -16,9 +16,15 @@ namespace Realms
             ContentHandler.Load();
             ModelHandler.Load();
         }
+
         public override void PostUpdateEverything()
         {
-            ModelHandler.Update();
+            //ModelHandler.Update();
+        }
+
+        public override void PostUpdateInput()
+        {
+            //ModelHandler.Update();
         }
     }
 }

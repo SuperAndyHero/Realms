@@ -33,7 +33,7 @@ namespace Realms.Items
             item.useTime = 10;
             item.useStyle = ItemUseStyleID.SwingThrow;
             item.consumable = true;
-            //item.createTile = TileType<Tiles.ExampleBlock>();
+            item.createTile = ModContent.TileType<Tiles.RealmAltar>();
         }
     }
 }

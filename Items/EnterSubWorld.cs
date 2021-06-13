@@ -37,14 +37,16 @@ namespace Realms.Items
         {
             Model model = GetModel("Realms/Models/LargeAsteroid_flat");
             model.SetModTexture("Realms/Models/AsteroidTexture");
+            //Model model = GetModel("Realms/Models/altar_smooth");
+            //model.SetModTexture("Realms/Models/altar");
             model.LightingSetting(true, true);
             model.Specular(10);
             model.SetAlpha(0.5f);
 
-            Vector3 dir = ModelHandler.LightingDirection(Main.LocalPlayer.Center, out Vector3 averageColor, 72, 8, 0.5f);
+            Vector3 dir = ModelHandler.LightingDirection(Main.LocalPlayer.Center / 16, out Vector3 averageColor, 4, 8, 0.5f);
             model.AmbientColor(averageColor * 0.25f);
             model.DirectionalLight0(true, dir, averageColor / 4, averageColor);
-            model.Draw(Main.LocalPlayer.Center + new Vector2(0, Main.LocalPlayer.gfxOffY), 50, (float)Main.GameUpdateCount / 50);
+            model.Draw(Main.LocalPlayer.Center + new Vector2(0, Main.LocalPlayer.gfxOffY), 50f, (float)Main.GameUpdateCount / 50, (float)Main.GameUpdateCount / 67, 0, false);
             //model.DrawBoundingBox(spriteBatch, Main.LocalPlayer.Center + new Vector2(0, Main.LocalPlayer.gfxOffY), Color.Purple * 0.25f, 50);
         }
 

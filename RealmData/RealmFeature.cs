@@ -40,7 +40,7 @@ namespace Realms.RealmData
         /// <summary>
         /// (1 in this) chance that takes into account rarity. Is the input to ShouldPlace.
         /// </summary>
-        private int placeChanceNormal = 0;
+        private float placeChanceNormal = 0;
         //private float placeChanceScaled = 0;
         #endregion
 
@@ -49,7 +49,7 @@ namespace Realms.RealmData
         /// Should be used for block placing, takes into account both PrecentChance adjusted for RarityMult
         /// Not set if Generate is overridden
         /// </summary>
-        protected bool ShouldPlaceNormal => WorldGen.genRand.Next(placeChanceNormal) < 1;
+        protected bool ShouldPlaceNormal => WorldGen.genRand.NextFloat(placeChanceNormal) < 1f;
         /// <summary>
         /// Should be used for block placing, takes into account both PrecentChance adjusted for world size and RarityMult
         /// Not set if Generate is overridden
@@ -91,7 +91,7 @@ namespace Realms.RealmData
             Rarity = rarity;//save
             Size = size;//save
             Frequency = frequency;//save
-            placeChanceNormal = (int)(100f / (PrecentChance * RarityMult));//deterministic
+            placeChanceNormal = 100f / (PrecentChance * RarityMult);//deterministic
             return this;
         }
 
@@ -119,7 +119,7 @@ namespace Realms.RealmData
         /// <param name="j"></param>
         protected virtual void IterateValidZone(int i, int j)
         {
-            if(ShouldPlaceScaled)
+            if(ShouldPlaceNormal)
                 WorldGen.PlaceTile(i, j, TileType(i, j), true, true);
         }
 
