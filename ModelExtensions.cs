@@ -5,12 +5,15 @@ using Microsoft.Xna.Framework.Content;
 using System.IO;
 using Terraria;
 using Terraria.ModLoader;
+using Terraria.Graphics.Effects;
+using System;
 
 namespace Realms
 {
 	public static class RealmExtensions
 	{
-		public static void SetTexture(this Model model, Texture2D texture)
+        #region basicEffect methods
+        public static void SetTexture(this Model model, Texture2D texture)
 		{
 			foreach (ModelMesh mesh in model.Meshes)
 				foreach (BasicEffect effect in mesh.Effects)
@@ -39,7 +42,7 @@ namespace Realms
 				foreach (BasicEffect effect in mesh.Effects)
 				{
 					effect.DirectionalLight0.Enabled = enabled;
-					effect.DirectionalLight0.Direction = Vector3.Normalize(direction);
+					effect.DirectionalLight0.Direction = direction;
 					effect.DirectionalLight0.DiffuseColor = diffuseColor;
 					effect.DirectionalLight0.SpecularColor = specularColor;
 				}
@@ -53,7 +56,7 @@ namespace Realms
 				foreach (BasicEffect effect in mesh.Effects)
 				{
 					effect.DirectionalLight1.Enabled = enabled;
-					effect.DirectionalLight1.Direction = Vector3.Normalize(direction);
+					effect.DirectionalLight1.Direction = direction;
 					effect.DirectionalLight1.DiffuseColor = diffuseColor;
 					effect.DirectionalLight1.SpecularColor = specularColor;
 				}
@@ -67,7 +70,7 @@ namespace Realms
 				foreach (BasicEffect effect in mesh.Effects)
 				{
 					effect.DirectionalLight2.Enabled = enabled;
-					effect.DirectionalLight2.Direction = Vector3.Normalize(direction);
+					effect.DirectionalLight2.Direction = direction;
 					effect.DirectionalLight2.DiffuseColor = diffuseColor;
 					effect.DirectionalLight2.SpecularColor = specularColor;
 				}
@@ -126,7 +129,22 @@ namespace Realms
 						effect.EnableDefaultLighting();
 				}
 		}
-		public static void DrawBoundingBox(this Model model, SpriteBatch spriteBatch, Vector2 position, Color color, float scale = 1)
+        #endregion
+
+		public static void IterateEffect(this Model model, Action<Effect> method)
+        {
+			foreach (ModelMesh mesh in model.Meshes)
+				foreach (Effect effect in mesh.Effects)
+					method(effect);
+		}
+		public static void SetEffect(this Model model, Effect effect)
+        {
+			foreach (ModelMesh mesh in model.Meshes)
+				foreach (ModelMeshPart part in mesh.MeshParts)
+					part.Effect = effect;
+
+		}
+        public static void DrawBoundingBox(this Model model, SpriteBatch spriteBatch, Vector2 position, Color color, float scale = 1)
 		{
 			foreach (ModelMesh mesh in model.Meshes)
 			{

@@ -1,10 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Realms.Effects;
 using System;
 using System.IO;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.Enums;
+using Terraria.Graphics.Effects;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
@@ -69,40 +71,6 @@ namespace Realms.Tiles
 			return true;
 		}
 
-		public override void DrawEffects(int i, int j, SpriteBatch spriteBatch, ref Color drawColor, ref int nextSpecialDrawIndex)
-        {
-            base.DrawEffects(i, j, spriteBatch, ref drawColor, ref nextSpecialDrawIndex);
-        }
-
-        public override void SpecialDraw(int i, int j, SpriteBatch spriteBatch)
-        {
-            base.SpecialDraw(i, j, spriteBatch);
-        }
-
-        public override bool PreDraw(int i, int j, SpriteBatch spriteBatch)
-        {
-            return base.PreDraw(i, j, spriteBatch);
-        }
-
-        public override void PostDraw(int i, int j, SpriteBatch spriteBatch)
-        {
-			Tile tile = Main.tile[i, j];
-			if (tile.frameX == 0 && tile.frameY == 0)
-            {
-				//Model model = GetModel("Realms/Models/altar_smooth");
-				//model.SetModTexture("Realms/Models/altar");
-				//model.LightingSetting(true, true, true);
-				//model.Specular(10);
-				//model.SetAlpha(0.5f);
-
-				//Vector3 dir = ModelHandler.LightingDirection(Main.LocalPlayer.Center, out Vector3 averageColor, 72, 8, 0.5f);
-				//model.AmbientColor(averageColor * 0.25f);
-				//model.DirectionalLight0(true, dir, averageColor / 4, averageColor);
-				//model.Draw((new Vector2(i, j) * 16), 1f, (float)Main.GameUpdateCount / 100, 0, (float)Main.GameUpdateCount / 183, false);
-				//model.DrawBoundingBox(spriteBatch, Main.LocalPlayer.Center + new Vector2(0, Main.LocalPlayer.gfxOffY), Color.Purple * 0.25f, 50);
-			}
-		}
-
 		public override void NumDust(int i, int j, bool fail, ref int num) => num = 1;
 		public override bool Drop(int i, int j) => false;
 		public override void KillMultiTile(int i, int j, int frameX, int frameY) => Item.NewItem(new Vector2(i, j) * 16, new Vector2(5, 3) * 16, drop);//change here if size change
@@ -115,16 +83,48 @@ namespace Realms.Tiles
 	{
 		public void Draw(int i, int j, SpriteBatch spriteBatch)
         {
-			Vector2 pos = new Vector2(i + 3, j - 3);
-			Model model = GetModel("Realms/Models/altar_smooth");
-			model.SetModTexture("Realms/Models/altar");
-			model.LightingSetting(true, false);
-			Vector3 dir = ModelHandler.LightingDirection(pos, out Vector3 averageColor, 4, 8, 10f);
-			model.Specular(5, averageColor);
-			model.AmbientColor(averageColor / 2);
-			model.DirectionalLight0(true, dir, averageColor / 4, averageColor / 4);
-			model.Draw((pos * 16), 0.45f, (float)Main.GameUpdateCount / 30, (float)Main.GameUpdateCount / 42, 0, true);
-			spriteBatch.Draw(Main.blackTileTexture, new Vector2(i, j) * 16 - Main.screenPosition, Color.Green);
+			Vector2 centerPos = new Vector2(i + 3, j - 3);
+			Vector2 pos = centerPos + new Vector2(0, ((float)Math.Sin((float)Main.GameUpdateCount / 40) * 0.2f));
+
+			Model model0 = GetModel("Realms/Models/sphere");
+			model0.SetTexture(ModContent.GetTexture("Realms/Models/sphere_tex_png"));
+			model0.EmissiveColor(Color.White);
+			model0.Draw((pos * 16), (float)(Math.Sin((float)Main.GameUpdateCount / 65) + 9) * 1.2f, (float)Main.GameUpdateCount / 50, (float)Main.GameUpdateCount / 63, (float)Main.GameUpdateCount / 300, true);
+			Main.LocalPlayer.velocity *= 0.92f;
+			Lighting.AddLight(centerPos * 16, 0.25f, 0.4f, 0.25f);
+
+			Model model = GetModel("Realms/Models/altar");
+			Vector3 dir = ModelHandler.LightingDirection(centerPos, out Vector3 averageColor, 4, 8, 10f);
+			foreach (ModelMesh mesh in model.Meshes)
+				foreach (BasicNormalEffect effect in mesh.Effects)
+				{
+					effect.TextureMap.SetValue(ModContent.GetTexture("Realms/Models/altar_tex"));
+					effect.NormalMap.SetValue(ModContent.GetTexture("Realms/Models/altar_normal"));
+
+					effect.EyePosition.SetValue(new Vector3(ModelHandler.cameraPosition, 1));
+					effect.LightDirection.SetValue(dir);
+
+					effect.DiffuseIntensity.SetValue(1f);
+					effect.AmbientIntensity.SetValue(1f);
+
+					effect.SpecularColor.SetValue(new Vector4(averageColor, 1));
+					effect.DiffuseColor.SetValue(new Vector4(averageColor / 2, 1));
+					effect.AmbientColor.SetValue(new Vector4(averageColor / 2, 1));
+				}
+
+
+			//model.SetModTexture("Realms/Models/altar_tex");
+			//model.LightingSetting(true, false);
+			//Vector3 dir = ModelHandler.LightingDirection(pos, out Vector3 averageColor, 4, 8, 10f);
+			//model.Specular(5, averageColor);
+			//model.AmbientColor(averageColor / 2);
+			//model.DirectionalLight0(true, dir, averageColor / 4, averageColor / 4);
+
+
+			model.Draw((pos * 16), 0.0045f, (float)Main.GameUpdateCount / 200, (float)Main.GameUpdateCount / 333, 0, true);
+
+
+            //spriteBatch.Draw(Main.blackTileTexture, new Vector2(i, j) * 16 - Main.screenPosition, Color.Green);
 		}
 
 		protected override int ValidType => ModContent.TileType<RealmAltar>();

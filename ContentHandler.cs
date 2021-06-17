@@ -41,39 +41,26 @@ namespace Realms
 			//modelSphere = LoadAsset<Model>("Realms/Models/UntexturedSphere.xnc");
 		}
 
-		public static Model GetModel(string path)
-        {
-			if (assetCache.ContainsKey(path))
-				return (Model)assetCache[path];
-			else
-			{
-				Model model = LoadAsset<Model>(path + extension);
-				assetCache.Add(path, model);
-				return model;
-			}
-		}
+		public static Model GetModel(string path) =>
+			GetAsset<Model>(path);
 
-		public static BasicEffect GetMaterial(string path)
+		public static BasicEffect GetMaterial(string path) =>
+			GetAsset<BasicEffect>(path);
+
+		//Called this to match `ModContent.GetModTexture(str path)`
+		public static Texture2D GetXnaTexture(string path) =>
+			GetAsset<Texture2D>(path);
+
+		//caches gotten assets
+		public static T GetAsset<T>(string path)
 		{
 			if (assetCache.ContainsKey(path))
-				return (BasicEffect)assetCache[path];
+				return (T)assetCache[path];
 			else
 			{
-				BasicEffect basicEffect = LoadAsset<BasicEffect>(path + extension);
-				assetCache.Add(path, basicEffect);
-				return basicEffect;
-			}
-		}
-
-		public static Texture2D GetXnaTexture(string path)
-		{
-			if (assetCache.ContainsKey(path))
-				return (Texture2D)assetCache[path];
-			else
-			{
-				Texture2D texture = LoadAsset<Texture2D>(path + extension);
-				assetCache.Add(path, texture);
-				return texture;
+				T asset = LoadAsset<T>(path + extension);
+				assetCache.Add(path, asset);
+				return asset;
 			}
 		}
 
