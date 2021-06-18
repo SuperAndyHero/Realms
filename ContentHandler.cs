@@ -12,8 +12,11 @@ namespace Realms
 {
 	public static class ContentHandler
 	{
-		private static MethodInfo create_ContentReader;
-		private static MethodInfo readAsset;
+		private static MethodInfo createContentReader_Info;
+		private static Func<ContentManager, Stream, string, Action<IDisposable>, ContentReader> createContentReader;
+
+		private static MethodInfo readAsset_Info;
+		private static Func<ContentReader, object> readAsset;
 
 		public static string extension;
 
@@ -22,9 +25,15 @@ namespace Realms
 		public static void Load(string xnbExtension = ".xnc")
 		{
 			extension = xnbExtension;
-			create_ContentReader = typeof(ContentReader).GetMethod("Create", BindingFlags.NonPublic | BindingFlags.Static);
-			readAsset = typeof(ContentReader).GetMethod("ReadAsset", BindingFlags.NonPublic | BindingFlags.Instance).MakeGenericMethod(typeof(object));
-			
+			//We grab info about a internal method in the xna framework
+			createContentReader_Info = typeof(ContentReader).GetMethod("Create", BindingFlags.NonPublic | BindingFlags.Static);
+			//Here we cache this method for performance
+			createContentReader = (Func<ContentManager, Stream, string, Action<IDisposable>, ContentReader>)Delegate.CreateDelegate(
+				typeof(Func<ContentManager, Stream, string, Action<IDisposable>, ContentReader>), createContentReader_Info);
+
+			readAsset_Info = typeof(ContentReader).GetMethod("ReadAsset", BindingFlags.NonPublic | BindingFlags.Instance).MakeGenericMethod(typeof(object));
+			readAsset = (Func<ContentReader, object>)Delegate.CreateDelegate(typeof(Func<ContentReader, object>), readAsset_Info);
+
 			//quick info
 			//MemoryStream streams from memory
 			//FileStream streams from disk
@@ -81,8 +90,8 @@ namespace Realms
 		/// <returns></returns>
 		public static T LoadAsset<T>(Stream stream)
 		{
-			using (ContentReader contentReader = (ContentReader)create_ContentReader.Invoke(null, new object[] { Main.ShaderContentManager, stream, "", null }))
-				return (T)readAsset.Invoke(contentReader, null);
+			using (ContentReader contentReader = createContentReader(Main.ShaderContentManager, stream, "", null))
+				return (T)readAsset(contentReader);
 		}
 	}
 }
