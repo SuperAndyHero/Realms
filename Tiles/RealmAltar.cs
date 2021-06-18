@@ -83,19 +83,24 @@ namespace Realms.Tiles
 	{
 		public void Draw(int i, int j, SpriteBatch spriteBatch)
         {
+			int a = Main.renderCount;
+			if(a == 3)
+            {
+				var v = 1;
+            }
 			Vector2 centerPos = new Vector2(i + 3, j - 3);
 			Vector2 pos = centerPos + new Vector2(0, ((float)Math.Sin((float)Main.GameUpdateCount / 40) * 0.2f));
+
+			Lighting.AddLight(centerPos * 16, 0.25f, 0.4f, 0.25f);
 
 			Model model0 = GetModel("Realms/Models/sphere");
 			model0.SetTexture(ModContent.GetTexture("Realms/Models/sphere_tex_png"));
 			model0.EmissiveColor(Color.White);
 			model0.Draw((pos * 16), (float)(Math.Sin((float)Main.GameUpdateCount / 65) + 9) * 1.2f, (float)Main.GameUpdateCount / 50, (float)Main.GameUpdateCount / 63, (float)Main.GameUpdateCount / 300, true);
-			Main.LocalPlayer.velocity *= 0.92f;
-			Lighting.AddLight(centerPos * 16, 0.25f, 0.4f, 0.25f);
 
 			Model model = GetModel("Realms/Models/altar");
 			Vector3 dir = ModelHandler.LightingDirection(centerPos, out Vector3 averageColor, 4, 8, 10f);
-			foreach (ModelMesh mesh in model.Meshes)
+			foreach (ModelMesh mesh in model.Meshes)//this can be condensed if the final model only has one mesh and one effect (at least only one you use)
 				foreach (BasicNormalEffect effect in mesh.Effects)
 				{
 					effect.TextureMap.SetValue(ModContent.GetTexture("Realms/Models/altar_tex"));

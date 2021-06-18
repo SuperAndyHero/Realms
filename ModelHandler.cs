@@ -17,6 +17,9 @@ namespace Realms
 		public static Matrix Projection_Ortho = new Matrix();
 		public static Matrix Projection_Perspect = new Matrix();
 
+		public static Matrix Projection_Ortho_Split = new Matrix();
+		public static Matrix Projection_Perspect_Split = new Matrix();
+
 		public static Matrix CameraView = new Matrix();
 		//public static Matrix TileCameraView = new Matrix();
 
@@ -25,29 +28,60 @@ namespace Realms
 
 		public static Vector2 cameraPosition = new Vector2();
 
+		public const int CameraDistance = 1930;
+
+		public static List<CachedModelDraw> cachedModels = new List<CachedModelDraw>();
+
 		public static void Load()
 		{
 			Projection_Ortho = Matrix.CreateOrthographic(Main.screenWidth, Main.screenHeight, 0, 5000);
 			Projection_Perspect = Matrix.CreatePerspectiveFieldOfView((float)Math.PI / 8f, Main.ViewSize.X / Main.ViewSize.Y, 1, 5000);
+
+			Projection_Ortho_Split = Matrix.CreateOrthographic(Main.screenWidth, Main.screenHeight, 0, CameraDistance);
+			Projection_Perspect_Split = Matrix.CreatePerspectiveFieldOfView((float)Math.PI / 8f, Main.ViewSize.X / Main.ViewSize.Y, 1, CameraDistance);
 		}
 
 		public static void Update()
 		{
-			if (Main.screenPosition != Main.screenLastPosition || Main.ViewSize != OldViewsize)
+			if (/*Main.screenPosition != Main.screenLastPosition ||*/ Main.ViewSize != OldViewsize)
 			{
-				Vector2 pos = Main.screenPosition + Main.LocalPlayer.velocity;
-				cameraPosition = (pos  + (Main.ViewSize / 2) + new Vector2(0, Main.ViewSize.Y * (Main.GameViewMatrix.Zoom.Y - 1))) * new Vector2(1, -1);
-				CameraView = Matrix.CreateLookAt(new Vector3(cameraPosition, 1930), new Vector3(cameraPosition, 0), Vector3.UnitY) * Main.GameViewMatrix.ZoomMatrix;
+				//translation is now done on draw, which adds one vector subtraction per draw, but removes a matrix creation every update
+				//this might be a issue later since it replaces (matrix mul * 1) with (Vector subtract * DrawCount) worth a test... later.
+				//Vector2 pos = Main.screenPosition + Main.LocalPlayer.velocity;
+				cameraPosition = (/*pos + */(Main.ViewSize / 2) + new Vector2(0, Main.ViewSize.Y * (Main.GameViewMatrix.Zoom.Y - 1))) * new Vector2(1, -1);
+				CameraView = Matrix.CreateLookAt(new Vector3(cameraPosition, CameraDistance), new Vector3(cameraPosition, 0), Vector3.UnitY) * Main.GameViewMatrix.ZoomMatrix;
 				//TileCameraView = Matrix.CreateLookAt(new Vector3(camPos, 383), new Vector3(camPos, 0), Vector3.UnitY);//broken matrix
 
 				OldViewsize = Main.ViewSize;//a
 			}
 		}
 
+		readonly public struct CachedModelDraw
+        {
+			readonly public Model model;
+			readonly Matrix world;
+            readonly bool perspective;
+
+			public CachedModelDraw(Model model, Matrix world, bool perspective)
+            {
+				this.model = model;
+				this.world = world;
+				this.perspective = perspective;
+            }
+		}
+
+		public static void DrawSplit(this Model model, Vector2 position, float scale = 1, float rotX = 0, float rotY = 0, float rotZ = 0, bool perspective = true)
+		{
+			cachedModels.Add(new CachedModelDraw(
+				model,
+				Matrix.CreateScale(scale) * Matrix.CreateFromYawPitchRoll(rotX, rotY, rotZ) * Matrix.CreateTranslation(new Vector3((position - Main.screenPosition) * new Vector2(1, -1), 0)),
+				perspective));
+		}
+
 		public static void Draw(this Model model, Vector2 position, float scale = 1, float rotX = 0, float rotY = 0, float rotZ = 0, bool perspective = false)
 		{
 			Main.graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-			Matrix world = Matrix.CreateScale(scale) * Matrix.CreateFromYawPitchRoll(rotX, rotY, rotZ) * Matrix.CreateTranslation(new Vector3(position * new Vector2(1, -1), 0));
+			Matrix world = Matrix.CreateScale(scale) * Matrix.CreateFromYawPitchRoll(rotX, rotY, rotZ) * Matrix.CreateTranslation(new Vector3((position - Main.screenPosition) * new Vector2(1, -1), 0));
 			foreach (ModelMesh mesh in model.Meshes)
 			{
 				foreach (Effect effect in mesh.Effects)
