@@ -81,13 +81,15 @@ namespace Realms.Tiles
 
 	public class AltarEntity : SimpleEntity, IDrawable
 	{
+		private bool a = false;//TODO: FIX
 		public void Draw(int i, int j, SpriteBatch spriteBatch)
         {
-			int a = Main.renderCount;
-			if(a == 3)
-            {
-				var v = 1;
-            }
+			if (!a)
+			{
+				GetModel("Realms/Models/altar").SetEffect(new BasicNormalEffect());
+				a = true;
+			}
+
 			Vector2 centerPos = new Vector2(i + 3, j - 3);
 			Vector2 pos = centerPos + new Vector2(0, ((float)Math.Sin((float)Main.GameUpdateCount / 40) * 0.2f));
 
@@ -126,10 +128,10 @@ namespace Realms.Tiles
 			//model.DirectionalLight0(true, dir, averageColor / 4, averageColor / 4);
 
 
-			model.Draw((pos * 16), 0.0045f, (float)Main.GameUpdateCount / 200, (float)Main.GameUpdateCount / 333, 0, true);
+			//model.Draw((pos * 16), 0.0045f, (float)Main.GameUpdateCount / 200, (float)Main.GameUpdateCount / 333, 0, true);
+			model.DrawSplit((pos * 16), 0.0045f, (float)Main.GameUpdateCount / 200, (float)Main.GameUpdateCount / 333, 0, true);
 
-
-            //spriteBatch.Draw(Main.blackTileTexture, new Vector2(i, j) * 16 - Main.screenPosition, Color.Green);
+			//spriteBatch.Draw(Main.blackTileTexture, new Vector2(i, j) * 16 - Main.screenPosition, Color.Green);
 		}
 
 		protected override int ValidType => ModContent.TileType<RealmAltar>();

@@ -23,29 +23,29 @@ namespace Realms
 {
     public class TEWorld : ModWorld
     {
-        private List<(Point16, IDrawable)> drawbuffer;//tuple
+        public static List<(Point16, IDrawable)> TEBuffer;//tuple
 
         public override void PreUpdate()
         {
-            drawbuffer = new List<(Point16, IDrawable)>();
+            TEBuffer = new List<(Point16, IDrawable)>();
 
             foreach (KeyValuePair<Point16, TileEntity> item in TileEntity.ByPosition)
                 if (item.Value is IDrawable)
-                    drawbuffer.Add((item.Key, item.Value as IDrawable));//cull offscreen?
+                    TEBuffer.Add((item.Key, item.Value as IDrawable));//cull offscreen?
         }
 
         public override void PostUpdate()
         {
-            ModelHandler.Update();
+
         }
 
         public override void PostDrawTiles()
         {
-            if (drawbuffer != null)
+            if (TEBuffer != null)
             {
                 Main.spriteBatch.Begin(default, BlendState.AlphaBlend, SamplerState.PointClamp, default, default, default, Main.GameViewMatrix.TransformationMatrix);
 
-                foreach ((Point16, IDrawable) drawable in drawbuffer)
+                foreach ((Point16, IDrawable) drawable in TEBuffer)
                     drawable.Item2.Draw(drawable.Item1.X, drawable.Item1.Y, Main.spriteBatch);
 
                 Main.spriteBatch.End();
@@ -53,7 +53,7 @@ namespace Realms
         }
     }
 
-    interface IDrawable
+    public interface IDrawable
     {
         void Draw(int i, int j, SpriteBatch spriteBatch);
     }

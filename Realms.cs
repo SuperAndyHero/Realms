@@ -17,12 +17,16 @@ using System.Collections.Generic;
 using System.Linq;
 using Terraria;
 using Terraria.ModLoader;
+using static Realms.ModelHandler;
+using Terraria.DataStructures;
 
 namespace Realms
 {
 	public class Realms : Mod
 	{
-        public static RenderTarget2D Target = Main.dedServ ? null : new RenderTarget2D(Main.graphics.GraphicsDevice, Main.screenWidth, Main.screenHeight, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+        public static RenderTarget2D BackgroundTarget = Main.dedServ ? null : new RenderTarget2D(Main.graphics.GraphicsDevice, Main.screenWidth, Main.screenHeight, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.DiscardContents);
+        public static RenderTarget2D ForegroundTarget = Main.dedServ ? null : new RenderTarget2D(Main.graphics.GraphicsDevice, Main.screenWidth, Main.screenHeight, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.DiscardContents);
+        public static RenderTarget2D TETarget = Main.dedServ ? null : new RenderTarget2D(Main.graphics.GraphicsDevice, Main.screenWidth, Main.screenHeight, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
 
         public override void Load()
         {
@@ -32,34 +36,80 @@ namespace Realms
             Filters.Scene["NormalEffect"] = new Filter(new ScreenShaderData(screenRef, "Pass1"), EffectPriority.High);
             Filters.Scene["NormalEffect"].Load();
 
-            Main.OnPreDraw += DrawToTargets;
-            On.Terraria.Main.DrawTiles += BehindTiles;
+           
+            On.Terraria.Main.DoDraw += DrawToTargets;
+            On.Terraria.Main.DrawBG += BeforeWorld;
+            On.Terraria.Main.DrawInfernoRings += AfterWorld;
 
-            GetModel("Realms/Models/altar").SetEffect(new BasicNormalEffect());
+            
         }
 
-        private static void DrawToTargets(GameTime obj)
+        private static void BeforeWorld(On.Terraria.Main.orig_DrawBG orig, Main self)
         {
-            Main.graphics.GraphicsDevice.SetRenderTarget(Target);
-            Main.graphics.GraphicsDevice.Clear(Color.Red);
+            orig(self);
+            Main.spriteBatch.Draw(BackgroundTarget, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight), Color.White);
         }
 
-        //use a differnent method (that that gets called more often
-        private static void BehindTiles(On.Terraria.Main.orig_DrawTiles orig, Main self, bool solidOnly = true, int waterStyleOverride = -1)
+        private static void AfterWorld(On.Terraria.Main.orig_DrawInfernoRings orig, Main self)
         {
-            Main.spriteBatch.Draw(Target, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight), Color.White);
-            orig(self, solidOnly, waterStyleOverride);
+            orig(self);
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.instance.Rasterizer, null, Main.BackgroundViewMatrix.TransformationMatrix);
+
+            Main.spriteBatch.Draw(ForegroundTarget, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight), Color.White);
+            Main.spriteBatch.End();
+
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.instance.Rasterizer, null, Main.Transform);
         }
 
+        private static void DrawToTargets(On.Terraria.Main.orig_DoDraw orig, Main self, GameTime obj)
+        {
+            Main.graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+
+            Main.graphics.GraphicsDevice.SetRenderTarget(BackgroundTarget);
+            Main.graphics.GraphicsDevice.Clear(Color.Transparent);
+            foreach (CachedModelDraw modelDraw in cachedModels)
+                foreach (ModelMesh mesh in modelDraw.model.Meshes)
+                {
+                    foreach (IEffectMatrices effect in mesh.Effects)
+                    {
+                        effect.World = modelDraw.world;
+                        effect.View = CameraView;
+                        effect.Projection = modelDraw.perspective ? Projection_Perspect_Split_Far : Projection_Ortho_Split_Far;
+                    }
+                    mesh.Draw();
+                }
+            Main.graphics.GraphicsDevice.SetRenderTarget(null);
+
+
+            Main.graphics.GraphicsDevice.SetRenderTarget(ForegroundTarget);
+            Main.graphics.GraphicsDevice.Clear(Color.Transparent);
+            foreach (CachedModelDraw modelDraw in cachedModels)
+                foreach (ModelMesh mesh in modelDraw.model.Meshes)
+                {
+                    foreach (IEffectMatrices effect in mesh.Effects)
+                    {
+                        effect.World = modelDraw.world;
+                        //effect.View = CameraView;
+                        effect.Projection = modelDraw.perspective ? Projection_Perspect_Split_Near : Projection_Ortho_Split_Near;
+                    }
+                    mesh.Draw();
+                }
+            Main.graphics.GraphicsDevice.SetRenderTarget(null);
+
+            cachedModels = new List<CachedModelDraw>();
+
+            orig(self, obj);
+        }
 
         public override void PreUpdateEntities()
         {
-           
+
         }
 
         public override void PostUpdateEverything()
         {
-           
+            ModelHandler.Update();
         }
 
         public override void PostUpdateInput()
