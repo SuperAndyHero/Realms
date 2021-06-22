@@ -6,17 +6,11 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using System.IO;
-using static Realms.ContentHandler;
 using Realms.Effects;
 using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using Terraria;
-using Terraria.ModLoader;
 using static Realms.ModelHandler;
 using Terraria.DataStructures;
 
@@ -26,8 +20,7 @@ namespace Realms
 	{
         public static RenderTarget2D BackgroundTarget = Main.dedServ ? null : new RenderTarget2D(Main.graphics.GraphicsDevice, Main.screenWidth, Main.screenHeight, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.DiscardContents);
         public static RenderTarget2D ForegroundTarget = Main.dedServ ? null : new RenderTarget2D(Main.graphics.GraphicsDevice, Main.screenWidth, Main.screenHeight, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.DiscardContents);
-        public static RenderTarget2D TETarget = Main.dedServ ? null : new RenderTarget2D(Main.graphics.GraphicsDevice, Main.screenWidth, Main.screenHeight, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-
+        
         public override void Load()
         {
             ContentHandler.Load();
@@ -36,12 +29,12 @@ namespace Realms
             Filters.Scene["NormalEffect"] = new Filter(new ScreenShaderData(screenRef, "Pass1"), EffectPriority.High);
             Filters.Scene["NormalEffect"].Load();
 
-           
+            ContentHandler.GetModel("Realms/Models/altar").SetEffect(new BasicNormalEffect());
+
+
             On.Terraria.Main.DoDraw += DrawToTargets;
             On.Terraria.Main.DrawBG += BeforeWorld;
             On.Terraria.Main.DrawInfernoRings += AfterWorld;
-
-            
         }
 
         private static void BeforeWorld(On.Terraria.Main.orig_DrawBG orig, Main self)
@@ -53,7 +46,7 @@ namespace Realms
         private static void AfterWorld(On.Terraria.Main.orig_DrawInfernoRings orig, Main self)
         {
             orig(self);
-            Main.spriteBatch.End();
+            Main.spriteBatch.End();//A spritebatch swap to change the matrix, this spritebatch only draws a few things before this
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.instance.Rasterizer, null, Main.BackgroundViewMatrix.TransformationMatrix);
 
             Main.spriteBatch.Draw(ForegroundTarget, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight), Color.White);
@@ -73,7 +66,7 @@ namespace Realms
                 {
                     foreach (IEffectMatrices effect in mesh.Effects)
                     {
-                        effect.World = modelDraw.world;
+                        effect.World = Matrix.CreateScale(modelDraw.scale) * Matrix.CreateFromYawPitchRoll(modelDraw.rotX, modelDraw.rotY, modelDraw.rotZ) * Matrix.CreateTranslation(new Vector3(((modelDraw.position - (Main.screenPosition + Main.LocalPlayer.velocity))) * new Vector2(1, -1), 0));
                         effect.View = CameraView;
                         effect.Projection = modelDraw.perspective ? Projection_Perspect_Split_Far : Projection_Ortho_Split_Far;
                     }
@@ -89,7 +82,7 @@ namespace Realms
                 {
                     foreach (IEffectMatrices effect in mesh.Effects)
                     {
-                        effect.World = modelDraw.world;
+                        //effect.World = modelDraw.world;//this is the same effect, so it doesn't need to be set again
                         //effect.View = CameraView;
                         effect.Projection = modelDraw.perspective ? Projection_Perspect_Split_Near : Projection_Ortho_Split_Near;
                     }
@@ -102,19 +95,9 @@ namespace Realms
             orig(self, obj);
         }
 
-        public override void PreUpdateEntities()
-        {
-
-        }
-
         public override void PostUpdateEverything()
         {
             ModelHandler.Update();
-        }
-
-        public override void PostUpdateInput()
-        {
-            //ModelHandler.Update();
         }
     }
 }

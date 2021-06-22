@@ -78,23 +78,27 @@ namespace Realms
 		readonly public struct CachedModelDraw
         {
 			readonly public Model model;
-			readonly public Matrix world;
-            readonly public bool perspective;
+			readonly public Vector2 position;
+			readonly public float scale;
+			readonly public float rotX;
+			readonly public float rotY;
+			readonly public float rotZ;
+			readonly public bool perspective;
 
-			public CachedModelDraw(Model model, Matrix world, bool perspective)
+			public CachedModelDraw(Model model, Vector2 position, float scale, float rotX, float rotY, float rotZ, bool perspective)
             {
 				this.model = model;
-				this.world = world;
+				this.position = position;
+				this.scale = scale;
+				this.rotX = rotX;
+				this.rotY = rotY;
+				this.rotZ = rotZ;
 				this.perspective = perspective;
             }
 		}
 
-		public static void DrawSplit(this Model model, Vector2 position, float scale = 1, float rotX = 0, float rotY = 0, float rotZ = 0, bool perspective = true)
-		{
-			cachedModels.Add( new CachedModelDraw(model,
-				Matrix.CreateScale(scale) * Matrix.CreateFromYawPitchRoll(rotX, rotY, rotZ) * Matrix.CreateTranslation(new Vector3(((position - (Main.screenPosition + Main.LocalPlayer.velocity))) * new Vector2(1, -1), 0)),
-				perspective));
-		}
+		public static void DrawSplit(this Model model, Vector2 position, float scale = 1, float rotX = 0, float rotY = 0, float rotZ = 0, bool perspective = true) =>
+			cachedModels.Add(new CachedModelDraw(model, position, scale, rotX, rotY, rotZ, perspective));
 
 		public static void Draw(this Model model, Vector2 position, float scale = 1, float rotX = 0, float rotY = 0, float rotZ = 0, bool perspective = false)
 		{

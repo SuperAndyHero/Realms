@@ -34,11 +34,6 @@ namespace Realms
                     TEBuffer.Add((item.Key, item.Value as IDrawable));//cull offscreen?
         }
 
-        public override void PostUpdate()
-        {
-
-        }
-
         public override void PostDrawTiles()
         {
             if (TEBuffer != null)

@@ -74,7 +74,7 @@ namespace Realms
 		}
 
 		/// <summary>
-		/// Reads asset from disk, Use GetAsset instead to get from cache if asset has already been read.
+		/// Reads asset from memory, Use GetAsset instead to get from cache if asset has already been read.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="path">includes extension</param>
@@ -83,7 +83,7 @@ namespace Realms
 			LoadAsset<T>(new MemoryStream(ModContent.GetFileBytes(path)));
 
 		/// <summary>
-		/// Reads asset from disk, Use GetAsset instead to get from cache if asset has already been read.
+		/// Reads asset from memory, Use GetAsset instead to get from cache if asset has already been read.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="stream"></param>
