@@ -61,7 +61,10 @@ namespace Realms.Tiles
 
 			int index = ModContent.GetInstance<AltarEntity>().Find(left, top);
 			if (index == -1)
+			{
+				Main.NewText("No TE found");
 				return false;
+			}
 
 			AltarEntity entity = (AltarEntity)TileEntity.ByID[index];
 			//foreach (var item in tEScoreBoard.scores)
@@ -79,11 +82,11 @@ namespace Realms.Tiles
 
 
 
-	public class AltarEntity : SimpleEntity, IDrawable
+	public class AltarEntity : SimpleEntity, Realms.IDrawable
 	{
-		public void Draw(int i, int j, SpriteBatch spriteBatch)
+		public void Draw(SpriteBatch spriteBatch)
         {
-			Vector2 centerPos = new Vector2(i + 3, j - 3);
+			Vector2 centerPos = new Vector2(Position.X + 3, Position.Y - 3);
 			Vector2 pos = centerPos + new Vector2(0, ((float)Math.Sin((float)Main.GameUpdateCount / 40) * 0.2f));
 
 			Lighting.AddLight(centerPos * 16, 0.25f, 0.4f, 0.25f);
@@ -126,9 +129,25 @@ namespace Realms.Tiles
 			//model.Draw((pos * 16), 0.0045f, (float)Main.GameUpdateCount / 200, (float)Main.GameUpdateCount / 333, 0, true);
 
 			//spriteBatch.Draw(Main.blackTileTexture, new Vector2(i, j) * 16 - Main.screenPosition, Color.Green);
+			//model.IterateEffect(IterateMethod);
 		}
 
-		protected override int ValidType => ModContent.TileType<RealmAltar>();
+        //private void IterateMethod(Effect effect)
+        //      {
+        //	(effect as BasicNormalEffect).AmbientColor.SetValue(new Vector4(Color.Red.ToVector3(), 1));
+        //}
+
+        public override TagCompound Save()
+        {
+            return base.Save();
+        }
+
+        public override void Load(TagCompound tag)
+        {
+            base.Load(tag);
+        }
+
+        protected override int ValidType => ModContent.TileType<RealmAltar>();
         protected override int TileSquareRange => 5;
     }
 }

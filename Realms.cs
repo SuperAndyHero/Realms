@@ -95,9 +95,11 @@ namespace Realms
             orig(self, obj);
         }
 
-        public override void PostUpdateEverything()
-        {
+        public override void PostUpdateEverything() =>
             ModelHandler.Update();
+        public interface IDrawable
+        {
+            void Draw(SpriteBatch spriteBatch);
         }
     }
 }

@@ -18,20 +18,21 @@ using Terraria.Graphics;
 using Realms;
 using Terraria.ModLoader.IO;
 using Realms.Effects;
+using Realms;
 
 namespace Realms
 {
     public class TEWorld : ModWorld
     {
-        public static List<(Point16, IDrawable)> TEBuffer;//tuple
+        public static List<Realms.IDrawable> TEBuffer;
 
         public override void PreUpdate()
         {
-            TEBuffer = new List<(Point16, IDrawable)>();
+            TEBuffer = new List<Realms.IDrawable>();
 
             foreach (KeyValuePair<Point16, TileEntity> item in TileEntity.ByPosition)
                 if (item.Value is IDrawable)
-                    TEBuffer.Add((item.Key, item.Value as IDrawable));//cull offscreen?
+                    TEBuffer.Add(item.Value as Realms.IDrawable);//cull offscreen?
         }
 
         public override void PostDrawTiles()
@@ -40,17 +41,12 @@ namespace Realms
             {
                 Main.spriteBatch.Begin(default, BlendState.AlphaBlend, SamplerState.PointClamp, default, default, default, Main.GameViewMatrix.TransformationMatrix);
 
-                foreach ((Point16, IDrawable) drawable in TEBuffer)
-                    drawable.Item2.Draw(drawable.Item1.X, drawable.Item1.Y, Main.spriteBatch);
+                foreach (Realms.IDrawable drawable in TEBuffer)
+                    drawable.Draw(Main.spriteBatch);
 
                 Main.spriteBatch.End();
             }
         }
-    }
-
-    public interface IDrawable
-    {
-        void Draw(int i, int j, SpriteBatch spriteBatch);
     }
 
     public abstract class SimpleEntity : ModTileEntity

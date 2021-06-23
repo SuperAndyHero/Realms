@@ -7,6 +7,7 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.Graphics.Effects;
 using System;
+using System.Collections.Generic;
 
 namespace Realms
 {
@@ -133,16 +134,20 @@ namespace Realms
 
 		public static void IterateEffect(this Model model, Action<Effect> method)
         {
+			List<Effect> checkedEffects = new List<Effect>();//dubious optimization
 			foreach (ModelMesh mesh in model.Meshes)
 				foreach (Effect effect in mesh.Effects)
-					method(effect);
+					if (!checkedEffects.Contains(effect))
+					{
+						method(effect);
+						checkedEffects.Add(effect);
+					}
 		}
 		public static void SetEffect(this Model model, Effect effect)
         {
 			foreach (ModelMesh mesh in model.Meshes)
 				foreach (ModelMeshPart part in mesh.MeshParts)
 					part.Effect = effect;
-
 		}
         public static void DrawBoundingBox(this Model model, SpriteBatch spriteBatch, Vector2 position, Color color, float scale = 1)
 		{
