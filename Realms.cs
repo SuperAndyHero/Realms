@@ -22,6 +22,7 @@ namespace Realms
         public static RenderTarget2D ForegroundTarget = Main.dedServ ? null : new RenderTarget2D(Main.graphics.GraphicsDevice, Main.screenWidth, Main.screenHeight, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.DiscardContents);
 
         public static UI testUI;
+        public static UI testUI2;
 
         public override void Load()
         {
@@ -55,8 +56,22 @@ namespace Realms
             testUI.AddElement(new ItemSlot()
             {
                 Offset = Vector2.One * 100,
-                Size = Vector2.One * 50,
+                Size = Vector2.One * 50
             });
+            testUI.AddElement(new CloseButton(testUI));
+            testUI.AddElement(new DragBar(testUI));
+
+            testUI2 = new UI()
+            {
+                Size = Vector2.One * 300,
+            };
+            testUI2.AddElement(new Button()
+            {
+                Size = Vector2.One * 50,
+                onClick = Click
+            });
+            testUI2.AddElement(new CloseButton(testUI2));
+            testUI2.AddElement(new DragBar(testUI2));
         }
 
         private static void Click()

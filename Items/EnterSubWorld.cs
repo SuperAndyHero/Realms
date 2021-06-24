@@ -54,8 +54,10 @@ namespace Realms.Items
         {
             //TeleportHandler.InitiateTeleportEvent();
             Realms.testUI.Deactivate();
+            Realms.testUI2.Deactivate();
             Realms.SetupTestUI();
             Realms.testUI.Activate();
+            Realms.testUI2.Activate();
 
             //Subworld.Enter<Realm>(false);
 
