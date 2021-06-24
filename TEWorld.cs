@@ -18,21 +18,25 @@ using Terraria.Graphics;
 using Realms;
 using Terraria.ModLoader.IO;
 using Realms.Effects;
-using Realms;
 
 namespace Realms
 {
     public class TEWorld : ModWorld
     {
-        public static List<Realms.IDrawable> TEBuffer;
+        public interface IDrawableTE
+        {
+            void Draw(SpriteBatch spriteBatch);
+        }
+
+        public static List<IDrawableTE> TEBuffer;
 
         public override void PreUpdate()
         {
-            TEBuffer = new List<Realms.IDrawable>();
+            TEBuffer = new List<IDrawableTE>();
 
             foreach (KeyValuePair<Point16, TileEntity> item in TileEntity.ByPosition)
-                if (item.Value is IDrawable)
-                    TEBuffer.Add(item.Value as Realms.IDrawable);//cull offscreen?
+                if (item.Value is IDrawableTE)
+                    TEBuffer.Add(item.Value as IDrawableTE);//cull offscreen?
         }
 
         public override void PostDrawTiles()
@@ -41,7 +45,7 @@ namespace Realms
             {
                 Main.spriteBatch.Begin(default, BlendState.AlphaBlend, SamplerState.PointClamp, default, default, default, Main.GameViewMatrix.TransformationMatrix);
 
-                foreach (Realms.IDrawable drawable in TEBuffer)
+                foreach (IDrawableTE drawable in TEBuffer)
                     drawable.Draw(Main.spriteBatch);
 
                 Main.spriteBatch.End();

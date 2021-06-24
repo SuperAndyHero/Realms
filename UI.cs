@@ -10,6 +10,10 @@ using Terraria.Enums;
 using Terraria.Graphics.Effects;
 using Terraria.ID;
 using Terraria.ModLoader;
+using ReLogic.Graphics;
+using ReLogic.Localization.IME;
+using ReLogic.OS;
+using ReLogic.Utilities;
 using Terraria.ModLoader.IO;
 using Terraria.ObjectData;
 using static Realms.ContentHandler;
@@ -20,45 +24,47 @@ namespace Realms
     {
         public static List<UI> ActiveUIList = new List<UI>();
 
+        public static IUIElement EmptyElement = new Empty();
+
+        public static bool LastMouseLeft;
+
         public static void Update()
         {
-            foreach(UI ui in ActiveUIList)
+            foreach (UI ui in ActiveUIList)
             {
-                if (ui.CheckClicked())
+                if (ui.CheckHasInteracted(HasLeftClicked))
                 {
                     ActiveUIList.Remove(ui);
                     ActiveUIList.Insert(0, ui);//they are drawn in reverse order, so this moves it to the start of the list so its on top and checked first
                     break;
                 }
             }
+            LastMouseLeft = Main.mouseLeft;
         }
 
         public static void Draw(SpriteBatch spriteBatch)
         {
-            for(int i = ActiveUIList.Count - 1; i > 0; i--)
+            for(int i = ActiveUIList.Count; i > 0; i--)//draws each ui in reverse order
             {
-                ActiveUIList[i].Draw(spriteBatch);
+                ActiveUIList[i - 1].Draw(spriteBatch);
             }
         }
+
+        public static bool HasLeftClicked => Main.mouseLeft && !LastMouseLeft;
 
         public static Rectangle GetRect(this IUIElement element) =>
-            new Rectangle((int)(element.Position.X + element.ParentUI.Position.X), (int)(element.Position.Y + element.ParentUI.Position.Y), (int)element.Size.X, (int)element.Size.Y);
+            new Rectangle((int)(element.RealPosition.X), (int)(element.RealPosition.Y), (int)element.Size.X, (int)element.Size.Y);
 
-        public static bool MouseOver(this IUIElement element) =>
+        public static bool MouseOver(this IUIElement element) => 
             element.GetRect().Contains(new Point(Main.mouseX, Main.mouseY));
 
-        public static bool HasClickedOn(this IUIElement element)
+        public static void BlockItemUse()
         {
-            if (Main.mouseLeft && Main.mouseLeftRelease && element.MouseOver())
-            {
-                Main.mouseLeftRelease = false;
-                Main.LocalPlayer.releaseUseItem = false;
-                Main.LocalPlayer.mouseInterface = true;
-                return true;
-            }
-            return false;
+            Main.LocalPlayer.delayUseItem = true;
+            Main.mouseLeftRelease = false;
+            Main.LocalPlayer.releaseUseItem = false;
+            Main.LocalPlayer.mouseInterface = true;
         }
-
     }
 
     //TODO
@@ -71,21 +77,23 @@ namespace Realms
     {
         IUIElement ParentUI { get; set; }
         Vector2 Size { get; set; }
-        Vector2 Position { get; set; }
+        Vector2 Offset { get; set; }
+        Vector2 RealPosition { get; }
         void Draw(SpriteBatch spriteBatch);
-        bool CheckClicked();
+        bool CheckHasInteracted(bool ClickReceived);
     }
 
     public class Button : IUIElement
     {
         public IUIElement ParentUI { get; set; }
         public Vector2 Size { get; set; } = new Vector2(32, 32);
-        public Vector2 Position { get; set; } = Vector2.Zero;
+        public Vector2 Offset { get; set; } = Vector2.Zero;
+        public Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }
 
         public Texture2D texture = Main.blackTileTexture;
-        public Color textureColor = Color.White;
+        public Color textureColor = Color.Red;
         public Texture2D highlightedTexture = Main.blackTileTexture;
-        public Color highlightedColor = Color.White;
+        public Color highlightedColor = Color.Blue;
 
         public Action onClick;
 
@@ -101,9 +109,9 @@ namespace Realms
                 spriteBatch.Draw(texture, this.GetRect(), textureColor);
         }
 
-        public virtual bool CheckClicked()
+        public virtual bool CheckHasInteracted(bool ClickReceived)
         {
-            if (this.HasClickedOn())
+            if (this.MouseOver() && ClickReceived)
             {
                 onClick?.Invoke();
                 return true;
@@ -116,18 +124,19 @@ namespace Realms
     {
         public IUIElement ParentUI { get; set; }
         public Vector2 Size { get; set; } = new Vector2(32, 32);
-        public Vector2 Position { get; set; } = Vector2.Zero;
+        public Vector2 Offset { get; set; } = Vector2.Zero;
+        public Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }
 
-        public Texture2D slotTexture = Main.blackTileTexture;
+        public Texture2D slotTexture = Main.inventoryBackTexture;
         public Color slotColor = Color.White;
-        public Texture2D iconTexture = Main.blackTileTexture;
-        public Color iconColor = Color.White;
+        public Texture2D iconTexture = Main.EquipPageTexture[1];
+        public Color iconColor = Color.White * 0.5f;
 
         public Func<Item, bool> itemAllowed;
 
-        public Item storedItem;
+        public Item storedItem = new Item();
 
-        public ItemSlot() { }
+        public ItemSlot() { storedItem.TurnToAir(); }
         public ItemSlot(UI parent) =>
             ParentUI = parent;
 
@@ -146,25 +155,48 @@ namespace Realms
             Rectangle rect = this.GetRect();
 
             spriteBatch.Draw(slotTexture, rect, slotColor);
-            if(storedItem != null)
+            if (!storedItem.IsAir)
             {
+                Texture2D tex = Main.itemTexture[storedItem.type];
+                Rectangle frame = Main.itemAnimations[storedItem.type] != null ? Main.itemAnimations[storedItem.type].GetFrame(tex) : tex.Frame();
+                Vector2 position = rect.TopLeft();
+                Vector2 origin = (frame.Size() - rect.Size()) / 2;
                 ModItem modItem = storedItem.modItem;
-                if(modItem != null)
+                if (modItem != null)
                 {
-                    if(modItem.PreDrawInInventory(spriteBatch, rect.TopLeft(), rect, Color.AliceBlue, Color.Red, rect.Center.ToVector2(), 1f))
-                        spriteBatch.Draw(ModContent.GetTexture(modItem.Texture), rect, Color.Green);
-                    modItem.PostDrawInInventory(spriteBatch, rect.TopLeft(), rect, Color.MediumPurple, Color.Aquamarine, rect.Center.ToVector2(), 1f);
+                    if (modItem.PreDrawInInventory(spriteBatch, position, frame, Color.White, Color.White, origin, 1f))//vanilla item loader has a similar named method, keep in mind
+                        spriteBatch.Draw(tex, position, frame, Color.White, 0f, origin, 1f, default, default);
+                    modItem.PostDrawInInventory(spriteBatch, position, frame, Color.White, Color.White, origin, 1f);
                 }
                 else
-                    spriteBatch.Draw(Main.itemTexture[storedItem.type], rect, Color.YellowGreen);
+                    spriteBatch.Draw(tex, position, frame, Color.White, 0f, origin, 1f, default, default);
+                if(storedItem.stack > 1)
+                    Utils.DrawBorderString(spriteBatch, storedItem.stack.ToString(), rect.Center() - new Vector2(rect.Width / 3, 0), Color.White);
+
+
+                if (this.MouseOver())
+                {
+                    Main.LocalPlayer.showItemIcon = false;
+                    string text = storedItem.AffixName();
+                    if (storedItem.stack > 1)//useful
+                        text = text + " (" + storedItem.stack + ")";
+                    Main.rare = storedItem.expert ? -12 : storedItem.rare;
+                    Main.HoverItem = storedItem;
+                    Main.instance.MouseTextHackZoom("lol", Main.rare, 1);
+                    Main.mouseText = true;
+                }
+
             }
             else
-                spriteBatch.Draw(iconTexture, rect, iconColor);
+            {
+                Vector2 origin = (iconTexture.Size() - rect.Size()) / 2;
+                spriteBatch.Draw(iconTexture, rect.TopLeft(), null, iconColor, 0f, origin, 1f, default, default);
+            }
         }
 
-        public virtual bool CheckClicked()
+        public virtual bool CheckHasInteracted(bool ClickReceived)
         {
-            if (this.HasClickedOn())
+            if (this.MouseOver() && ClickReceived)
             {
                 TrySwapItem(ref Main.mouseItem);
                 return true;
@@ -177,28 +209,29 @@ namespace Realms
     {
         public IUIElement ParentUI { get; set; }
         public Vector2 Size { get; set; } = Vector2.Zero;
-        public Vector2 Position { get; set; } = Vector2.Zero;
+        public Vector2 Offset { get; set; } = Vector2.Zero;
+        public Vector2 RealPosition { get => Offset; }
 
         public void Draw(SpriteBatch spriteBatch) { }
-        public virtual bool CheckClicked() => false;
+        public virtual bool CheckHasInteracted(bool ClickReceived) => false;
     }
 
     public class UI : IUIElement
     {
-        public IUIElement ParentUI { get; set; } = new Empty();
+        public IUIElement ParentUI { get; set; } = UIHandler.EmptyElement;
         public Vector2 Size { get; set; } = new Vector2(100, 100);
-        public Vector2 Position { get; set; } = Vector2.Zero;
-
+        public Vector2 Offset { get; set; } = Vector2.Zero;
+        public Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }
 
         public Texture2D backTexture = Main.blackTileTexture;
-        public Color focusedColor = Color.White;
-        public Color unfocusedColor = Color.Gray;
+        public Color focusedColor = Color.White * 0.5f;
+        public Color unfocusedColor = Color.Gray * 0.5f;
 
         public List<IUIElement> elements = new List<IUIElement>();
 
         public UI()
         {
-            Position = (new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f) - (Size * 0.5f);
+            Offset = (new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f) - (Size * 0.5f);
             OnCreate();
         }
 
@@ -223,7 +256,7 @@ namespace Realms
 
         public virtual void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(backTexture, this.GetRect(), HasFocus ? focusedColor : unfocusedColor);
+            spriteBatch.Draw(backTexture, this.GetRect(), HasFocus ? focusedColor * 0.5f : unfocusedColor * 0.5f);
 
             foreach (IUIElement element in elements)
             {
@@ -231,16 +264,21 @@ namespace Realms
             }
         }
 
-        public virtual bool CheckClicked()
+        public virtual bool CheckHasInteracted(bool ClickReceived)
         {
-            foreach(IUIElement element in elements)
+            if (this.MouseOver())
             {
-                if (element.CheckClicked())
-                    return true;
+                UIHandler.BlockItemUse();
+
+                foreach (IUIElement element in elements)
+                {
+                    if (element.CheckHasInteracted(ClickReceived))
+                        return true;
+                }
+
+                return ClickReceived;
             }
-             if (this.HasClickedOn())
-                return true;
-            else
+            else 
                 return false;
         }
     }

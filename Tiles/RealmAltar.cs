@@ -12,6 +12,7 @@ using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 using Terraria.ObjectData;
 using static Realms.ContentHandler;
+using static Realms.TEWorld;
 
 namespace Realms.Tiles
 {
@@ -82,7 +83,7 @@ namespace Realms.Tiles
 
 
 
-	public class AltarEntity : SimpleEntity, Realms.IDrawable
+	public class AltarEntity : SimpleEntity, IDrawableTE
 	{
 		public void Draw(SpriteBatch spriteBatch)
         {

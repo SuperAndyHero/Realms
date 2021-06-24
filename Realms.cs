@@ -20,7 +20,9 @@ namespace Realms
 	{
         public static RenderTarget2D BackgroundTarget = Main.dedServ ? null : new RenderTarget2D(Main.graphics.GraphicsDevice, Main.screenWidth, Main.screenHeight, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.DiscardContents);
         public static RenderTarget2D ForegroundTarget = Main.dedServ ? null : new RenderTarget2D(Main.graphics.GraphicsDevice, Main.screenWidth, Main.screenHeight, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.DiscardContents);
-        
+
+        public static UI testUI;
+
         public override void Load()
         {
             ContentHandler.Load();
@@ -35,6 +37,31 @@ namespace Realms
             On.Terraria.Main.DoDraw += DrawToTargets;
             On.Terraria.Main.DrawBG += BeforeWorld;
             On.Terraria.Main.DrawInfernoRings += AfterWorld;
+
+            SetupTestUI();
+        }
+
+        public static void SetupTestUI()
+        {
+            testUI = new UI()
+            {
+                Size = Vector2.One * 200,
+            };
+            testUI.AddElement(new Button()
+            {
+                Size = Vector2.One * 50,
+                onClick = Click
+            });
+            testUI.AddElement(new ItemSlot()
+            {
+                Offset = Vector2.One * 100,
+                Size = Vector2.One * 50,
+            });
+        }
+
+        private static void Click()
+        {
+            Main.NewText("clicked");
         }
 
         private static void BeforeWorld(On.Terraria.Main.orig_DrawBG orig, Main self)
@@ -97,9 +124,11 @@ namespace Realms
 
         public override void PostUpdateEverything() =>
             ModelHandler.Update();
-        public interface IDrawable
-        {
-            void Draw(SpriteBatch spriteBatch);
-        }
+
+        public override void UpdateUI(GameTime gameTime) =>
+            UIHandler.Update();
+
+        public override void PostDrawInterface(SpriteBatch spriteBatch) =>
+            UIHandler.Draw(spriteBatch);
     }
 }

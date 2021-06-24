@@ -53,8 +53,11 @@ namespace Realms.Items
         public override bool UseItem(Player player)
         {
             //TeleportHandler.InitiateTeleportEvent();
+            Realms.testUI.Deactivate();
+            Realms.SetupTestUI();
+            Realms.testUI.Activate();
 
-            Subworld.Enter<Realm>(false);
+            //Subworld.Enter<Realm>(false);
 
             //if (Subworld.IsActive<Ship.ShipSubworld>())
             //{
