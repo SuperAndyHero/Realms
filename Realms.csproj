@@ -19,7 +19,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="RealmData\BlockPatterns\" />
     <Folder Include="RealmData\WorldLocations\" />
   </ItemGroup>
 </Project>

@@ -23,6 +23,6 @@ namespace Realms.RealmData
         }
 
         public virtual int MaxTiles => 1;
-        public int GetTypeIndex(int i, int j, int typeLength, Point16 center) => 0;
+        public virtual int GetTypeIndex(int i, int j, int typeLength, Point16 center) => 0;
     }
 }

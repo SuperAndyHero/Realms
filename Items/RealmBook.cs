@@ -16,6 +16,8 @@ using Realms.RealmData;
 using Realms.RealmData.RealmEffects;
 using Realms.RealmData.RealmFeatures;
 using Terraria.ModLoader.IO;
+using Realms.RealmData.BlockPatterns;
+using Realms.UI;
 
 namespace Realms.Items
 {
@@ -37,6 +39,7 @@ namespace Realms.Items
         }
 
         public RealmInfo realmInfo;
+        public DebugBookUI DebugUI;
 
         public override TagCompound Save()
         {
@@ -59,21 +62,32 @@ namespace Realms.Items
         public override bool AltFunctionUse(Player player) => true;
         public override bool UseItem(Player player)
         {
-            if (player.altFunctionUse == 2)
+
+            if (DebugUI == null)
             {
-                if (realmInfo == null)
-                    realmInfo = new RealmInfo(300, 300, "TestWorldsD26",
-                    new List<RealmEffect> { new CampfireBuffEffect().Setup() },
-                    new List<RealmFeature> { new Spheres().Setup(new int[] { TileID.Demonite }, null, null) });
-                else
-                    Main.NewText(realmInfo.DisplayName);
+                DebugUI = new DebugBookUI();
+                DebugUI.realmItem = this;
+                DebugUI.Activate();
             }
             else
-                if (realmInfo != null)
-                    SubworldHandler.Enter(realmInfo);
-                else
-                    Main.NewText("null");
+                DebugUI.Activate();
+
             return true;
+
+            //if (player.altFunctionUse == 2)
+            //{
+            //    //if (realmInfo == null)
+            //        realmInfo = new RealmInfo(400, 400, "TestWorldsD35",
+            //        new List<RealmEffect> { new CampfireBuffEffect().Setup() },
+            //        new List<RealmFeature> { new Spheres().Setup(new int[] { TileID.Demonite, TileID.TungstenBrick, TileID.BubblegumBlock }, null, new PatternRadial().Setup(RealmFrequency.Slow))});
+            //    //else
+            //    //    Main.NewText(realmInfo.DisplayName);
+            //}
+            //else
+            //    if (realmInfo != null)
+            //        SubworldHandler.Enter(realmInfo);
+            //    else
+            //        Main.NewText("null");
         }
     }
 }

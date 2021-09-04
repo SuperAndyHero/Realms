@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Realms.Effects;
+using Realms.UI;
 using System;
 using System.IO;
 using Terraria;
@@ -63,11 +64,12 @@ namespace Realms.Tiles
 			int index = ModContent.GetInstance<AltarEntity>().Find(left, top);
 			if (index == -1)
 			{
-				Main.NewText("No TE found");
+				Main.NewText("Tile broken! Please place this again!");
 				return false;
 			}
 
 			AltarEntity entity = (AltarEntity)TileEntity.ByID[index];
+			entity.OpenUI();
 			//foreach (var item in tEScoreBoard.scores)
 			//{
 			//	Main.NewText(item.Key + ": " + item.Value);
@@ -85,7 +87,28 @@ namespace Realms.Tiles
 
 	public class AltarEntity : SimpleEntity, IDrawableTE
 	{
-		public void Draw(SpriteBatch spriteBatch)
+		public GUI AltarUI;
+
+		public void OpenUI()
+        {
+			//if (AltarUI == null)
+				AltarUI = new RealmAltarUI();
+
+			if (PlayerInRange)
+				AltarUI.Activate();
+		}
+
+		const int PlayerMaxRange = 150;
+		private bool PlayerInRange => 
+			(Main.LocalPlayer.position - ((Position.ToVector2() + new Vector2(2.5f, 0.5f)) * 16)).Length() < PlayerMaxRange;
+
+		public override void Update()
+        {
+            if (!PlayerInRange)
+				AltarUI.Deactivate();
+        }
+
+        public void Draw(SpriteBatch spriteBatch)
         {
 			Vector2 centerPos = new Vector2(Position.X + 3, Position.Y - 3);
 			Vector2 pos = centerPos + new Vector2(0, ((float)Math.Sin((float)Main.GameUpdateCount / 40) * 0.2f));
@@ -95,7 +118,7 @@ namespace Realms.Tiles
 			Model model0 = GetModel("Realms/Models/sphere");
 			model0.SetTexture(ModContent.GetTexture("Realms/Models/sphere_tex_png"));
 			model0.EmissiveColor(Color.White);
-			model0.Draw((pos * 16), (float)(Math.Sin((float)Main.GameUpdateCount / 65) + 9) * 1.2f, (float)Main.GameUpdateCount / 50, (float)Main.GameUpdateCount / 63, (float)Main.GameUpdateCount / 300, true);
+			model0.Draw((pos * 16), (float)(Math.Sin((float)Main.GameUpdateCount / 65 + Position.Y) + 9) * 1.2f, (float)Main.GameUpdateCount / 50, (float)Main.GameUpdateCount / 63, (float)Main.GameUpdateCount / 300, true);
 
 			Model model = GetModel("Realms/Models/altar");
 			Vector3 dir = ModelHandler.LightingDirection(centerPos, out Vector3 averageColor, 4, 8, 10f);
@@ -117,7 +140,7 @@ namespace Realms.Tiles
 				}
 
 
-			model.DrawSplit((pos * 16), 0.0045f, (float)Main.GameUpdateCount / 200, (float)Main.GameUpdateCount / 333, 0, true);
+			model.DrawSplit((pos * 16), 0.0045f, (float)Main.GameUpdateCount / 200 + Position.Y, (float)Main.GameUpdateCount / 333 + Position.X, 0, true);
 
 			//model.SetModTexture("Realms/Models/altar_tex");
 			//model.LightingSetting(true, false);
@@ -148,7 +171,12 @@ namespace Realms.Tiles
             base.Load(tag);
         }
 
-        protected override int ValidType => ModContent.TileType<RealmAltar>();
+        protected override int ValidTileType => ModContent.TileType<RealmAltar>();
         protected override int TileSquareRange => 5;
+    }
+
+	public static class AltarUI
+    {
+		
     }
 }

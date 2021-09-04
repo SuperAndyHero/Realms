@@ -64,7 +64,7 @@ namespace Realms.RealmData
         /// <param name="i"></param>
         /// <param name="j"></param>
         /// <returns></returns>
-        protected int TileType(int i, int j) =>
+        protected int PatternTileType(int i, int j) =>
             TileTypes[Pattern.GetTypeIndex(i, j, TileTypes.Length, center)];
         #endregion
 
@@ -120,7 +120,7 @@ namespace Realms.RealmData
         protected virtual void IterateValidZone(int i, int j)
         {
             if(ShouldPlaceNormal)
-                WorldGen.PlaceTile(i, j, TileType(i, j), true, true);
+                WorldGen.PlaceTile(i, j, PatternTileType(i, j), true, true);
         }
 
         /// <summary>

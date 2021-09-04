@@ -23,22 +23,30 @@ namespace Realms
 {
     public static class UIHandler
     {
-        public static List<UI> ActiveUIList = new List<UI>();
-        public static List<UI> ActivationQueue = new List<UI>();
-        public static List<UI> DeactivationQueue = new List<UI>();
+        public static List<IUIElement> ActiveUIList = new List<IUIElement>();
+        public static List<IUIElement> ActivationQueue = new List<IUIElement>();
+        public static List<IUIElement> DeactivationQueue = new List<IUIElement>();
 
-        public static IUIElement EmptyElement = new Empty();
+        public static readonly IUIElement EmptyElement = new Empty();
+
+        public static IUIElement MouseElement;
+        public static Vector2 MouseElementOffset = Vector2.Zero;
 
         public static bool LastMouseLeft;
 
         public static void Update()
         {
-            foreach (UI ui in ActivationQueue)
+
+            if (MouseElement != null)
+                MouseElement.Offset = new Vector2(Main.mouseX, Main.mouseY) + MouseElementOffset;
+            MouseElement = null;
+
+            foreach (GUI ui in ActivationQueue)
                 if (!ActiveUIList.Contains(ui))
                     ActiveUIList.Add(ui);
             ActivationQueue.Clear();
 
-            foreach (UI ui in ActiveUIList)
+            foreach (GUI ui in ActiveUIList)
             {
                 if (ui.CheckHasInteracted(HasLeftClicked))
                 {
@@ -49,7 +57,7 @@ namespace Realms
 
             }
 
-            foreach (UI ui in DeactivationQueue)
+            foreach (GUI ui in DeactivationQueue)
                 if (ActiveUIList.Contains(ui))
                     ActiveUIList.Remove(ui);
             DeactivationQueue.Clear();
@@ -80,6 +88,14 @@ namespace Realms
             Main.LocalPlayer.releaseUseItem = false;
             Main.LocalPlayer.mouseInterface = true;
         }
+
+        public static void Activate(this IUIElement element) =>
+            ActivationQueue.Add(element);
+        public static void Deactivate(this IUIElement element) =>
+            DeactivationQueue.Add(element);
+
+        public static bool HasFocus(this IUIElement element) => 
+            ActiveUIList[0] == element;
     }
 
     //TODO
@@ -109,7 +125,7 @@ namespace Realms
         public Color textureColor = Color.Gray;
         public Color highlightedColor = Color.White;
 
-        public CloseButton(UI parentUI)
+        public CloseButton(IUIElement parentUI)
         {
             ParentUI = parentUI;
             Offset = new Vector2(ParentUI.Size.X - Size.X, 0);
@@ -121,8 +137,7 @@ namespace Realms
         {
             if (this.MouseOver() && ClickReceived)
             {
-                if (ParentUI is UI)
-                    (ParentUI as UI).Deactivate();
+                ParentUI.Deactivate();
                 return true;
             }
             return false;
@@ -140,28 +155,36 @@ namespace Realms
         public Color textureColor = Color.Transparent;
         public Color highlightedColor = Color.LightGoldenrodYellow * 0.25f;
 
-        protected Vector2 mouseOffset = Vector2.Zero;
-
         public DragBar() { }
-        public DragBar(UI parentUI)
+        public DragBar(IUIElement parentUI)
         {
             ParentUI = parentUI;
             Size = new Vector2(parentUI.Size.X, 20);
         }
+        bool drag = false;//remove
 
-        public virtual void Draw(SpriteBatch spriteBatch) => spriteBatch.Draw(texture, this.GetRect(), this.MouseOver() ? highlightedColor : textureColor);
+        public virtual void Draw(SpriteBatch spriteBatch) => spriteBatch.Draw(texture, this.GetRect(), (this.MouseOver() && ParentUI.HasFocus()) ? highlightedColor : textureColor);
 
         public virtual bool CheckHasInteracted(bool ClickReceived)//the window slipping can be fixed by removing this and having a Var in UiHandler for dragged element
         {
             if (this.MouseOver())
             {
-                if (Main.mouseLeft && UIHandler.LastMouseLeft && ParentUI is UI && (ParentUI as UI).HasFocus)
+                if (ClickReceived)
                 {
-                    ParentUI.Offset = new Vector2(Main.mouseX, Main.mouseY) + mouseOffset;
+                    UIHandler.MouseElementOffset = ParentUI.Offset - new Vector2(Main.mouseX, Main.mouseY);
+                    drag = true;
+                    return true;
                 }
-                else
-                    mouseOffset = ParentUI.Offset - new Vector2(Main.mouseX, Main.mouseY);
+                if (drag)
+                {
+                    if (Main.mouseLeft && UIHandler.LastMouseLeft && ParentUI.HasFocus())
+                        UIHandler.MouseElement = ParentUI;
+                    else
+                        drag = false;
+                }
             }
+            //else //shouldn't be needed since you can move your mouse off this element without letting go of left mouse
+            //    drag = false;
             return false;
         }
     }
@@ -174,15 +197,15 @@ namespace Realms
         public Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }
 
         public Texture2D texture = Main.blackTileTexture;
-        public Color textureColor = Color.Blue;
+        public Color textureColor = Color.LightGray;
         public Texture2D highlightedTexture = Main.blackTileTexture;
-        public Color highlightedColor = Color.MediumPurple;
+        public Color highlightedColor = Color.White;
 
         public Action onClick;
 
         public virtual void Draw(SpriteBatch spriteBatch)
         {
-            if (this.MouseOver() && !Main.mouseLeft)
+            if (this.MouseOver() && !Main.mouseLeft && ParentUI.HasFocus())
                 spriteBatch.Draw(highlightedTexture, this.GetRect(), highlightedColor);
             else
                 spriteBatch.Draw(texture, this.GetRect(), textureColor);
@@ -197,6 +220,60 @@ namespace Realms
             }
             return false;
         }
+    }
+
+    public class UIText : IUIElement
+    {
+        public IUIElement ParentUI { get; set; }
+        public Vector2 Size { get; set; } = Vector2.One;
+        public Vector2 Offset { get; set; } = Vector2.Zero;
+        public Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }
+
+        public virtual Color TextColor { get; set; } = Color.White;
+        public virtual float TextScale { get; set; } = 1f;
+        public virtual string TextString { get; set; } = "Text Here";
+
+        public virtual void Draw(SpriteBatch spriteBatch) =>
+            Utils.DrawBorderString(spriteBatch, TextString, RealPosition, TextColor, TextScale);
+
+        public virtual bool CheckHasInteracted(bool ClickReceived) => false;
+    }
+
+    public class UISprite : IUIElement
+    {
+        public IUIElement ParentUI { get; set; }
+        public Vector2 Size { get; set; } = Vector2.One;
+        public Vector2 Offset { get; set; } = Vector2.Zero;
+        public Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }
+
+        public Texture2D texture = Main.blackTileTexture;
+        public Color textureColor = Color.White;
+
+        public virtual void Draw(SpriteBatch spriteBatch)
+        {
+            spriteBatch.Draw(texture, this.GetRect(), textureColor);
+        }
+
+        public virtual bool CheckHasInteracted(bool ClickReceived) => false;
+    }
+
+    public class HoverText : IUIElement
+    {
+        public IUIElement ParentUI { get; set; }
+        public Vector2 Size { get; set; } = new Vector2(32, 32);
+        public Vector2 Offset { get; set; } = Vector2.Zero;
+        public Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }
+
+        public virtual Color TextColor { get; set; } = Color.White;
+        public virtual float TextScale { get; set; } = 1f;
+        public virtual string TextString { get; set; } = "Text Here";
+
+        public virtual void Draw(SpriteBatch spriteBatch) {
+            if (this.MouseOver())
+                Main.instance.MouseTextHackZoom(TextString, Main.rare, 1);
+        }
+
+        public virtual bool CheckHasInteracted(bool ClickReceived) => false;
     }
 
     public class ItemSlot : IUIElement
@@ -221,7 +298,8 @@ namespace Realms
         {
             if(itemAllowed == null || itemAllowed(item))
             {
-                Main.PlaySound(SoundID.Grab);
+                if(!storedItem.IsAir || !item.IsAir)//so sound doesn't play when clicking a empty slot
+                    Main.PlaySound(SoundID.Grab);
                 Item temp = item;
                 item = storedItem;
                 storedItem = temp;
@@ -289,7 +367,7 @@ namespace Realms
         public virtual bool CheckHasInteracted(bool ClickReceived) => false;
     }
 
-    public class UI : IUIElement
+    public class GUI : IUIElement
     {
         public IUIElement ParentUI { get; set; } = UIHandler.EmptyElement;
         public Vector2 Size { get; set; } = new Vector2(100, 100);
@@ -297,12 +375,12 @@ namespace Realms
         public Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }
 
         public Texture2D backTexture = Main.blackTileTexture;
-        public Color focusedColor = Color.White * 0.5f;
-        public Color unfocusedColor = Color.Gray * 0.5f;
+        public Color focusedColor = Color.White;
+        public Color unfocusedColor = Color.Gray;
 
         public List<IUIElement> elements = new List<IUIElement>();
 
-        public UI()
+        public GUI()
         {
             Offset = (new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f) - (Size * 0.5f);
             OnCreate();
@@ -315,15 +393,10 @@ namespace Realms
             element.ParentUI = this;
             elements.Add(element);
         }
-        public void Activate() =>
-            UIHandler.ActivationQueue.Add(this);
-        public void Deactivate() =>
-            UIHandler.DeactivationQueue.Add(this);
-        public bool HasFocus => UIHandler.ActiveUIList[0] == this;
 
         public virtual void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(backTexture, this.GetRect(), HasFocus ? focusedColor * 0.5f : unfocusedColor * 0.5f);
+            spriteBatch.Draw(backTexture, this.GetRect(), this.HasFocus() ? focusedColor : unfocusedColor);
 
             foreach (IUIElement element in elements)
             {

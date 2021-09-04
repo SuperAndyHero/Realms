@@ -14,7 +14,7 @@ namespace Realms
 {
     public static class SubworldHandler 
     {
-        public static MethodInfo[] asd = typeof(SLWorld).GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
+        //public static MethodInfo[] asd = typeof(SLWorld).GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
         public static MethodInfo LoadWorldFile = typeof(SLWorld).GetMethod("LoadWorldFile", BindingFlags.NonPublic | BindingFlags.Static);
         public static string MainworldName;
         public static bool enteringWorld;
@@ -75,7 +75,7 @@ namespace Realms
 
         public override List<GenPass> tasks => new List<GenPass>() { new SubworldGenPass(GenMethod) };//do gen here, and run the loading code when it grabs it and then check before returning list
 
-        public void GenMethod(GenerationProgress genMessage)//todo see above
+        public void GenMethod(GenerationProgress genMessage)//todo see above (thanks old comment for being very clear...)
         {
             LoadWorldFile.Invoke(ModContent.GetInstance<SLWorld>(), new object[] { (CurrentSubworldPath), false });
             if(CurrentSubworldPath != Main.ActiveWorldFileData.Path)

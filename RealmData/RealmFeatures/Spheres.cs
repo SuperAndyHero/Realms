@@ -19,18 +19,17 @@ namespace Realms.RealmData.RealmFeatures
         protected override string GenerateMessage => "Generating Spheres";
         protected override void IterateValidZone(int i, int j)
         {
-            if (ShouldPlaceNormal)
+            if (ShouldPlaceNormal)//uses rarity for chance to spawn
             {
                 int radius = (int)((DefaultRadius + WorldGen.genRand.Next((int)FrequencyMult)) * SizeMult);//(default + rand(Freq)) * size
                 center = new Point16(i, j);//sets pattern center to center of sphere
 
                 for(int x = -radius; x < radius; x++)//basic circle gen
                     for (int y = -radius; y < radius; y++)
-                        if(Vector2.Distance(new Vector2(x, y), Vector2.Zero) <= radius)
-                            if(WorldGen.InWorld(i, j))
-                                WorldGen.PlaceTile(i + x, j + y, TileType(i + x, j + y), true, true);
+                        if(Vector2.Distance(new Vector2(x, y), Vector2.Zero) <= radius)//in circle
+                            if(WorldGen.InWorld(i + x, j + y))
+                                WorldGen.PlaceTile(i + x, j + y, PatternTileType(i + x, j + y), true, true);
             }
         }
-
     }
 }

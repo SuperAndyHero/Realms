@@ -14,10 +14,10 @@ namespace Realms.RealmData
 {
     public enum RealmEffectType
     {
-        Overlay = 1004,
-        Filter = 2003,
-        Potion = 3006,
-        Spawning = 4024,
+        Overlay = 1005,
+        Filter = 2004,
+        Potion = 3008,
+        Spawning = 4016,
         Misc = 100032
     }
 

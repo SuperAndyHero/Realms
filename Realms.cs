@@ -21,8 +21,8 @@ namespace Realms
         public static RenderTarget2D BackgroundTarget = Main.dedServ ? null : new RenderTarget2D(Main.graphics.GraphicsDevice, Main.screenWidth, Main.screenHeight, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.DiscardContents);
         public static RenderTarget2D ForegroundTarget = Main.dedServ ? null : new RenderTarget2D(Main.graphics.GraphicsDevice, Main.screenWidth, Main.screenHeight, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.DiscardContents);
 
-        public static UI testUI;
-        public static UI testUI2;
+        public static GUI testUI;
+        public static GUI testUI2;
 
         public override void Load()
         {
@@ -44,7 +44,7 @@ namespace Realms
 
         public static void SetupTestUI()
         {
-            testUI = new UI()
+            testUI = new GUI()
             {
                 Size = Vector2.One * 200,
             };
@@ -61,7 +61,7 @@ namespace Realms
             testUI.AddElement(new CloseButton(testUI));
             testUI.AddElement(new DragBar(testUI));
 
-            testUI2 = new UI()
+            testUI2 = new GUI()
             {
                 Size = Vector2.One * 300,
             };
@@ -124,8 +124,8 @@ namespace Realms
                 {
                     foreach (IEffectMatrices effect in mesh.Effects)
                     {
-                        //effect.World = modelDraw.world;//this is the same effect, so it doesn't need to be set again
-                        //effect.View = CameraView;
+                        effect.World = Matrix.CreateScale(modelDraw.scale) * Matrix.CreateFromYawPitchRoll(modelDraw.rotX, modelDraw.rotY, modelDraw.rotZ) * Matrix.CreateTranslation(new Vector3(((modelDraw.position - (Main.screenPosition + Main.LocalPlayer.velocity))) * new Vector2(1, -1), 0));
+                        effect.View = CameraView;
                         effect.Projection = modelDraw.perspective ? Projection_Perspect_Split_Near : Projection_Ortho_Split_Near;
                     }
                     mesh.Draw();
