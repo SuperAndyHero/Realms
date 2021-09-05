@@ -56,7 +56,9 @@ namespace Realms
             testUI.AddElement(new ItemSlot()
             {
                 Offset = Vector2.One * 100,
-                Size = Vector2.One * 50
+                Size = Vector2.One * 50,
+                iconColor = Color.White * 0.5f,
+                iconUnfocusedColor = Color.Gray * 0.5f
             });
             testUI.AddElement(new CloseButton(testUI));
             testUI.AddElement(new DragBar(testUI));

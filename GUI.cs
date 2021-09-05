@@ -95,13 +95,13 @@ namespace Realms
             DeactivationQueue.Add(element);
 
         public static bool HasFocus(this IUIElement element) => 
-            ActiveUIList[0] == element;
+            ActiveUIList[0] == element || (element != EmptyElement && element.ParentUI.HasFocus());
     }
 
     //TODO
-    //test it
-    //figure out unfocused color
     //figure out Ui scale (might be possible using RT and Main.UiScaleMatrix)
+
+
 
 
     public interface IUIElement
@@ -122,7 +122,8 @@ namespace Realms
         public Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }
 
         public Texture2D texture = Main.cdTexture;
-        public Color textureColor = Color.Gray;
+        public Color unfocusedColor = Color.Gray;
+        public Color baseColor = Color.LightGray;
         public Color highlightedColor = Color.White;
 
         public CloseButton(IUIElement parentUI)
@@ -131,7 +132,7 @@ namespace Realms
             Offset = new Vector2(ParentUI.Size.X - Size.X, 0);
         }
 
-        public virtual void Draw(SpriteBatch spriteBatch) => spriteBatch.Draw(texture, this.GetRect(), this.MouseOver() ? highlightedColor : textureColor);
+        public virtual void Draw(SpriteBatch spriteBatch) => spriteBatch.Draw(texture, this.GetRect(), ParentUI.HasFocus() ? this.MouseOver() ? highlightedColor : baseColor : unfocusedColor);
 
         public virtual bool CheckHasInteracted(bool ClickReceived)
         {
@@ -152,7 +153,8 @@ namespace Realms
         public Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }
 
         public Texture2D texture = Main.blackTileTexture;
-        public Color textureColor = Color.Transparent;
+        //TODO unfocused color
+        public Color baseColor = Color.Transparent;
         public Color highlightedColor = Color.LightGoldenrodYellow * 0.25f;
 
         public DragBar() { }
@@ -163,7 +165,7 @@ namespace Realms
         }
         bool drag = false;//remove
 
-        public virtual void Draw(SpriteBatch spriteBatch) => spriteBatch.Draw(texture, this.GetRect(), (this.MouseOver() && ParentUI.HasFocus()) ? highlightedColor : textureColor);
+        public virtual void Draw(SpriteBatch spriteBatch) => spriteBatch.Draw(texture, this.GetRect(), (this.MouseOver() && ParentUI.HasFocus()) ? highlightedColor : baseColor);
 
         public virtual bool CheckHasInteracted(bool ClickReceived)//the window slipping can be fixed by removing this and having a Var in UiHandler for dragged element
         {
@@ -189,15 +191,16 @@ namespace Realms
         }
     }
 
-    public class Button : IUIElement
+    public class Button : IUIElement //for buttons to darken when the UI is out of focus, this needs a new color for 
     {
         public IUIElement ParentUI { get; set; }
         public Vector2 Size { get; set; } = new Vector2(32, 32);
         public Vector2 Offset { get; set; } = Vector2.Zero;
         public Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }
 
+        public Color unfocusedColor = Color.DimGray;
         public Texture2D texture = Main.blackTileTexture;
-        public Color textureColor = Color.LightGray;
+        public Color baseColor = Color.LightGray;
         public Texture2D highlightedTexture = Main.blackTileTexture;
         public Color highlightedColor = Color.White;
 
@@ -205,10 +208,11 @@ namespace Realms
 
         public virtual void Draw(SpriteBatch spriteBatch)
         {
-            if (this.MouseOver() && !Main.mouseLeft && ParentUI.HasFocus())
+            bool hasFocus = ParentUI.HasFocus();
+            if (this.MouseOver() && !Main.mouseLeft && hasFocus)
                 spriteBatch.Draw(highlightedTexture, this.GetRect(), highlightedColor);
             else
-                spriteBatch.Draw(texture, this.GetRect(), textureColor);
+                spriteBatch.Draw(texture, this.GetRect(), hasFocus ? baseColor : unfocusedColor);
         }
 
         public virtual bool CheckHasInteracted(bool ClickReceived)
@@ -229,12 +233,13 @@ namespace Realms
         public Vector2 Offset { get; set; } = Vector2.Zero;
         public Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }
 
+        public virtual Color UnfocusedTextColor { get; set; } = Color.Gray;
         public virtual Color TextColor { get; set; } = Color.White;
         public virtual float TextScale { get; set; } = 1f;
         public virtual string TextString { get; set; } = "Text Here";
 
         public virtual void Draw(SpriteBatch spriteBatch) =>
-            Utils.DrawBorderString(spriteBatch, TextString, RealPosition, TextColor, TextScale);
+            Utils.DrawBorderString(spriteBatch, TextString, RealPosition, ParentUI.HasFocus() ? TextColor : UnfocusedTextColor, TextScale);
 
         public virtual bool CheckHasInteracted(bool ClickReceived) => false;
     }
@@ -247,11 +252,12 @@ namespace Realms
         public Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }
 
         public Texture2D texture = Main.blackTileTexture;
-        public Color textureColor = Color.White;
+        public Color baseColor = Color.White;
+        public Color unfocusedColor = Color.Gray;
 
         public virtual void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(texture, this.GetRect(), textureColor);
+            spriteBatch.Draw(texture, this.GetRect(), ParentUI.HasFocus() ? baseColor : unfocusedColor);
         }
 
         public virtual bool CheckHasInteracted(bool ClickReceived) => false;
@@ -283,10 +289,17 @@ namespace Realms
         public Vector2 Offset { get; set; } = Vector2.Zero;
         public Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }
 
+
         public Texture2D slotTexture = Main.inventoryBackTexture;
         public Color slotColor = Color.White;
+        public Color slotUnfocusedColor = Color.Gray;
+
         public Texture2D iconTexture = Main.EquipPageTexture[1];
-        public Color iconColor = Color.White * 0.5f;
+        public Color iconColor = Color.White;
+        public Color iconUnfocusedColor = Color.Gray;
+
+        public Color itemColor = Color.White;
+        public Color itemUnfocusedColor = Color.Gray;
 
         public Func<Item, bool> itemAllowed;
 
@@ -309,11 +322,13 @@ namespace Realms
         public virtual void Draw(SpriteBatch spriteBatch)
         {
             Rectangle rect = this.GetRect();
+            bool hasFocus = ParentUI.HasFocus();
 
-            spriteBatch.Draw(slotTexture, rect, slotColor);
+            spriteBatch.Draw(slotTexture, rect, hasFocus ? slotColor : slotUnfocusedColor);
             if (!storedItem.IsAir)
             {
                 Texture2D tex = Main.itemTexture[storedItem.type];
+                Color texColor = hasFocus ? itemColor : itemUnfocusedColor;
                 Rectangle frame = Main.itemAnimations[storedItem.type] != null ? Main.itemAnimations[storedItem.type].GetFrame(tex) : tex.Frame();
                 Vector2 position = rect.TopLeft();
                 Vector2 origin = (frame.Size() - rect.Size()) / 2;
@@ -321,15 +336,15 @@ namespace Realms
 
                 if (modItem != null)
                 {
-                    if (modItem.PreDrawInInventory(spriteBatch, position, frame, Color.White, Color.White, origin, 1f))//vanilla item loader has a similar named method, keep in mind
-                        spriteBatch.Draw(tex, position, frame, Color.White, 0f, origin, 1f, default, default);
-                    modItem.PostDrawInInventory(spriteBatch, position, frame, Color.White, Color.White, origin, 1f);
+                    if (modItem.PreDrawInInventory(spriteBatch, position, frame, texColor, texColor, origin, 1f))//vanilla item loader has a similar named method, keep in mind
+                        spriteBatch.Draw(tex, position, frame, texColor, 0f, origin, 1f, default, default);
+                    modItem.PostDrawInInventory(spriteBatch, position, frame, texColor, texColor, origin, 1f);
                 }
                 else
-                    spriteBatch.Draw(tex, position, frame, Color.White, 0f, origin, 1f, default, default);
+                    spriteBatch.Draw(tex, position, frame, texColor, 0f, origin, 1f, default, default);
 
                 if(storedItem.stack > 1)
-                    Utils.DrawBorderString(spriteBatch, storedItem.stack.ToString(), rect.Center() - new Vector2(rect.Width / 3, 0), Color.White);
+                    Utils.DrawBorderString(spriteBatch, storedItem.stack.ToString(), rect.Center() - new Vector2(rect.Width / 3, 0), texColor);//TODO fix text offset
 
                 if (this.MouseOver())
                 {
@@ -341,7 +356,7 @@ namespace Realms
             else
             {
                 Vector2 origin = (iconTexture.Size() - rect.Size()) / 2;
-                spriteBatch.Draw(iconTexture, rect.TopLeft(), null, iconColor, 0f, origin, 1f, default, default);
+                spriteBatch.Draw(iconTexture, rect.TopLeft(), null, hasFocus ? iconColor : iconUnfocusedColor, 0f, origin, 1f, default, default);
             }
         }
 
@@ -406,20 +421,19 @@ namespace Realms
 
         public virtual bool CheckHasInteracted(bool ClickReceived)
         {
-            if (this.MouseOver())
-            {
-                UIHandler.BlockItemUse();
+                bool mouseOver = this.MouseOver();
+                bool interacted = false;
 
                 foreach (IUIElement element in elements)
                 {
                     if (element.CheckHasInteracted(ClickReceived))
-                        return true;
+                        interacted = true;
                 }
 
-                return ClickReceived;
-            }
-            else 
-                return false;
+                if(mouseOver || interacted)
+                    UIHandler.BlockItemUse();
+
+                return (mouseOver && ClickReceived) || interacted;
         }
     }
 }

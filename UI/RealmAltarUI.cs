@@ -20,12 +20,12 @@ namespace Realms.UI
             Size = new Vector2(mainUIWidth, mainUIHeight);
             Offset = (new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f) - (new Vector2(mainUIWidth + 200, mainUIHeight) * 0.5f);
 
-            AddElement(new CloseButton(this) { texture = ModContent.GetTexture("Realms/UI/RealmUI/Close"), Offset = new Vector2(Size.X - 21, 11), textureColor = Color.LightGray});
+            AddElement(new CloseButton(this) { texture = ModContent.GetTexture("Realms/UI/RealmUI/Close"), Offset = new Vector2(Size.X - 21, 11), baseColor = Color.LightGray});
             AddElement(new DragBar(this) { Size = new Vector2(Size.X - 28, 16)});
             AddElement(new HoverText() { Size = new Vector2(Size.X - 28, 16), TextString = "Your balls. Hand em over." });
             Microsoft.Xna.Framework.Graphics.Texture2D mainslotTex = ModContent.GetTexture("Realms/UI/RealmUI/MainSlot");
-            AddElement(new UISprite() { texture = mainslotTex, Size = mainslotTex.Size(), Offset = new Vector2(-112, 0) });
-            AddElement(new ItemSlot() { Size = new Vector2(24, 24), Offset = new Vector2(-76, 38), iconTexture = ModContent.GetTexture("Realms/UI/RealmUI/SlotIcon"), slotTexture = Main.blackTileTexture, slotColor = Color.Transparent, iconColor = Color.White});
+
+
 
             AddElement(new Button()
             {
@@ -49,6 +49,21 @@ namespace Realms.UI
             {
                 Offset = new Vector2(138, 162),
                 TextString = "Create"
+            });
+
+
+
+            GUI ItemSlotPanel = new GUI() { backTexture = mainslotTex, Size = mainslotTex.Size(), Offset = new Vector2(-112, 0) };
+            AddElement(ItemSlotPanel);
+            ItemSlotPanel.AddElement(new DragBar(ItemSlotPanel));
+            ItemSlotPanel.AddElement(new ItemSlot()
+            {
+                Size = new Vector2(24, 24),
+                Offset = new Vector2(40, 42),
+                iconTexture = ModContent.GetTexture("Realms/UI/RealmUI/SlotIcon"),
+                slotTexture = Main.blackTileTexture,
+                slotColor = Color.Transparent,
+                slotUnfocusedColor = Color.Transparent,
             });
         }
 
