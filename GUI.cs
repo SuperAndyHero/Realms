@@ -23,7 +23,7 @@ namespace Realms
 {
     public static class UIHandler
     {
-        public static List<IUIElement> ActiveUIList = new List<IUIElement>();
+        public static List<IUIElement> ActiveUIList = new List<IUIElement>();//this gets cleared in the realm modworld on world load
         public static List<IUIElement> ActivationQueue = new List<IUIElement>();
         public static List<IUIElement> DeactivationQueue = new List<IUIElement>();
 
@@ -54,7 +54,6 @@ namespace Realms
                     ActiveUIList.Insert(0, ui);//they are drawn in reverse order, so this moves it to the start of the list so its on top and checked first
                     break;
                 }
-
             }
 
             foreach (GUI ui in DeactivationQueue)
@@ -382,7 +381,7 @@ namespace Realms
         public virtual bool CheckHasInteracted(bool ClickReceived) => false;
     }
 
-    public class GUI : IUIElement
+    public class GUI : IUIElement//this may need to store the player that opened it for MP
     {
         public IUIElement ParentUI { get; set; } = UIHandler.EmptyElement;
         public Vector2 Size { get; set; } = new Vector2(100, 100);

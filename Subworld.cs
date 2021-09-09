@@ -9,6 +9,7 @@ using System.Reflection;
 using Terraria.ModLoader.IO;
 using static Realms.SubworldHandler;
 using Realms.RealmData;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Realms
 {
@@ -16,29 +17,57 @@ namespace Realms
     {
         //public static MethodInfo[] asd = typeof(SLWorld).GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
         public static MethodInfo LoadWorldFile = typeof(SLWorld).GetMethod("LoadWorldFile", BindingFlags.NonPublic | BindingFlags.Static);
-        public static string MainworldName;
-        public static bool enteringWorld;
+        private static string _mainworldName;
+        public static string MainworldName { 
+            get
+            {
+                if (_mainworldName == null)
+                {
+                    _mainworldName = 
+                }
+
+                return _mainworldName;
+            } 
+        }
+        public static bool EnteringWorld;
         //public static string CurrentSubworldName;//filename
-        public static string SubworldFolderPath => Main.WorldPath + "\\Subworlds\\" + MainworldName + "\\Realms\\";
+        public static string SubworldFolderPath => Main.WorldPath + "\\Subworlds\\" + MainworldName + "\\Realms\\";//MainWorldName is always set before this is ever called
         /// <summary>
         /// Only call this is there is an active realm with a generated ID
         /// </summary>
-        public static string CurrentSubworldPath => SubworldFolderPath + activeRealm.DisplayName + "_" + activeRealm.RealmID + ".wld";
+        public static string CurrentSubworldPathName => SubworldFolderPath + activeRealm.DisplayName + "_" + activeRealm.RealmID;
+        public static string CurrentSubworldPathFull => CurrentSubworldPathName + ".wld";
+
+        public static Dictionary<RealmInfo, Texture2D> WorldPreviews = new Dictionary<RealmInfo, Texture2D>() { {null, ModContent.GetTexture("Realms/UI/DefaultPreviewQuestion")} };//these may need to be cleared as need-be
+        public static Texture2D LoadWorldTexture(RealmInfo realmInfo = null) 
+        {
+            if (WorldPreviews.ContainsKey(realmInfo))
+                return WorldPreviews[realmInfo];
+            else
+            {
+                string path;
+                if (!SLWorld.subworld)
+                    path = Main.WorldPath + "\\Subworlds\\" + (MainworldName == null ? Main.ActiveWorldFileData.GetFileName(false) : MainworldName) + "Preview";
+                else
+                    path = SubworldFolderPath
+
+            }
+        }
 
         public static RealmInfo activeRealm;
 
         public static void Enter(RealmInfo enterRealmInfo)
         {
-            if (!SLWorld.subworld)
-            {
-                MainworldName = Main.ActiveWorldFileData.GetFileName(false);
-            }
+            //if (!SLWorld.subworld)
+            //{
+            //    MainworldName = Main.ActiveWorldFileData.GetFileName(false);
+            //}
             activeRealm = enterRealmInfo;
             if (string.IsNullOrEmpty(activeRealm.RealmID))
                 activeRealm.CreateId();
             //Main.NewText("Entered subworld");
             Subworld.Enter<Realm>();
-            enteringWorld = false;
+            EnteringWorld = false;
         }
 
 
@@ -53,6 +82,11 @@ namespace Realms
                 foreach (RealmEffect realmEffect in activeRealm.realmEffectList)
                     realmEffect.Update();
         }
+
+        public override void Initialize()
+        {
+            UIHandler.ActiveUIList.Clear();
+        }
     }
 
     public class Realm : Subworld
@@ -63,8 +97,8 @@ namespace Realms
             {
                 if (DebugNoSave)
                     return false;
-                enteringWorld = !enteringWorld && MainworldName != Main.ActiveWorldFileData.GetFileName(false);
-                return enteringWorld;
+                EnteringWorld = !EnteringWorld && MainworldName != Main.ActiveWorldFileData.GetFileName(false);
+                return EnteringWorld;
             }
         }
         public override bool saveModData => true;
@@ -73,20 +107,28 @@ namespace Realms
         public override int width => activeRealm.Width;// WorldWidth;
         public override int height => activeRealm.Height;// WorldHeight;
 
-        public override List<GenPass> tasks => new List<GenPass>() { new SubworldGenPass(GenMethod) };//do gen here, and run the loading code when it grabs it and then check before returning list
+        public override List<GenPass> tasks => GenerationList;
+        public List<GenPass> GenerationList { 
+            get {
 
-        public void GenMethod(GenerationProgress genMessage)//todo see above (thanks old comment for being very clear...)
-        {
-            LoadWorldFile.Invoke(ModContent.GetInstance<SLWorld>(), new object[] { (CurrentSubworldPath), false });
-            if(CurrentSubworldPath != Main.ActiveWorldFileData.Path)
-            {
-                foreach(RealmFeature feature in activeRealm.realmFeatureList)
-                {
-                    feature.Generate(genMessage);
-                }
-            }
-            Main.ActiveWorldFileData = new Terraria.IO.WorldFileData(CurrentSubworldPath, false);
+                List<GenPass> genlist = new List<GenPass>();
+
+                genlist.Add(new SubworldGenPass(LoadRealm));
+
+                if (CurrentSubworldPathFull != Main.ActiveWorldFileData.Path)
+                    foreach (RealmFeature feature in activeRealm.realmFeatureList)
+                        genlist.Add(new SubworldGenPass(feature.Generate));
+
+                genlist.Add(new SubworldGenPass(FinishRealm));
+
+                return genlist;
+            } 
         }
+        public void LoadRealm(GenerationProgress genMessage) =>
+            LoadWorldFile.Invoke(ModContent.GetInstance<SLWorld>(), new object[] { (CurrentSubworldPathFull), false });
+        public void FinishRealm(GenerationProgress genMessage) =>
+            Main.ActiveWorldFileData = new Terraria.IO.WorldFileData(CurrentSubworldPathFull, false);
+
 
         //public override void OnVotedFor() => StartTeleportSequence();
         public override void Load()
