@@ -19,7 +19,7 @@ using Realms;
 using Terraria.ModLoader.IO;
 using Realms.Effects;
 
-namespace Realms//SuperAndyHero's one file tile entity enhancer
+namespace Realms
 {
     public class TEWorld : ModWorld
     {

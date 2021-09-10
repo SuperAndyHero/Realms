@@ -10,6 +10,8 @@ using Terraria.ModLoader.IO;
 using static Realms.SubworldHandler;
 using Realms.RealmData;
 using Microsoft.Xna.Framework.Graphics;
+using System.IO;
+using System.Linq;
 
 namespace Realms
 {
@@ -23,35 +25,66 @@ namespace Realms
             {
                 if (_mainworldName == null)
                 {
-                    _mainworldName = 
+                    if (!SLWorld.subworld)
+                        _mainworldName = Main.ActiveWorldFileData.GetFileName(false);
+                    else
+                        throw new Exception("Main world name not found");//TODO: save the world name as a string in the world data of every subworld
                 }
 
                 return _mainworldName;
             } 
         }
+
         public static bool EnteringWorld;
         //public static string CurrentSubworldName;//filename
-        public static string SubworldFolderPath => Main.WorldPath + "\\Subworlds\\" + MainworldName + "\\Realms\\";//MainWorldName is always set before this is ever called
+        public static string SubworldFolderPath => 
+            Main.WorldPath + "\\Subworlds\\" + MainworldName + "\\Realms\\";//MainWorldName is always set before this is ever called
         /// <summary>
         /// Only call this is there is an active realm with a generated ID
         /// </summary>
-        public static string CurrentSubworldPathName => SubworldFolderPath + activeRealm.DisplayName + "_" + activeRealm.RealmID;
-        public static string CurrentSubworldPathFull => CurrentSubworldPathName + ".wld";
+        public static string CurrentSubworldPathName(RealmInfo info) => 
+            SubworldFolderPath + info.DisplayName + "_" + info.RealmID;
+        public static string CurrentSubworldPathWld(RealmInfo info) => 
+            CurrentSubworldPathName(info) + ".wld";
 
-        public static Dictionary<RealmInfo, Texture2D> WorldPreviews = new Dictionary<RealmInfo, Texture2D>() { {null, ModContent.GetTexture("Realms/UI/DefaultPreviewQuestion")} };//these may need to be cleared as need-be
-        public static Texture2D LoadWorldTexture(RealmInfo realmInfo = null) 
+        public static Texture2D DefaultWorldPreview => ModContent.GetTexture("Realms/UI/DefaultPreviewQuestion");
+
+        public static Dictionary<string, Texture2D> WorldPreviews = new Dictionary<string, Texture2D>();//these may need to be cleared as need-be
+        public static Texture2D GetWorldTexture(RealmInfo realmInfo = null)
         {
-            if (WorldPreviews.ContainsKey(realmInfo))
-                return WorldPreviews[realmInfo];
-            else
-            {
-                string path;
-                if (!SLWorld.subworld)
-                    path = Main.WorldPath + "\\Subworlds\\" + (MainworldName == null ? Main.ActiveWorldFileData.GetFileName(false) : MainworldName) + "Preview";
-                else
-                    path = SubworldFolderPath
+            bool mainworld = (realmInfo == null);
 
+            if (mainworld || !string.IsNullOrEmpty(realmInfo.RealmID))//if mainworld or ID has been set
+            {
+                //mainworld entry is no long added by default since this would add it
+                string dictID = mainworld ? "" : realmInfo.RealmID;//main world always uses an empty string for the id for the id
+
+                if (WorldPreviews.ContainsKey(dictID))
+                    return WorldPreviews[dictID];
+                else
+                {
+                    string mainPath = SubworldFolderPath;
+                    string filePath = mainworld ?
+                        SubworldFolderPath + "MainWorld_Preview.png" :
+                        CurrentSubworldPathName(realmInfo) + "_Preview.png";
+
+                    Main.NewText("loading: " + filePath);//debug
+
+                    if (!Directory.Exists(mainPath))//creates the directory if it doesn't exist
+                        Directory.CreateDirectory(mainPath);
+
+                    Texture2D texture;
+                    if (File.Exists(filePath))//kept as a if statement for readablity
+                        texture = Texture2D.FromStream(Main.graphics.GraphicsDevice, File.OpenRead(filePath));
+                    else
+                        texture = DefaultWorldPreview;
+
+                    WorldPreviews.Add(dictID, texture);
+                    return texture;
+                }
             }
+            else//if id is unset return default
+                return DefaultWorldPreview;
         }
 
         public static RealmInfo activeRealm;
@@ -76,9 +109,10 @@ namespace Realms
 
     public class SubworldWorld : ModWorld
     {
+
         public override void PreUpdate()
         {
-            if(activeRealm != null)
+            if (activeRealm != null)
                 foreach (RealmEffect realmEffect in activeRealm.realmEffectList)
                     realmEffect.Update();
         }
@@ -86,6 +120,7 @@ namespace Realms
         public override void Initialize()
         {
             UIHandler.ActiveUIList.Clear();
+
         }
     }
 
@@ -115,7 +150,7 @@ namespace Realms
 
                 genlist.Add(new SubworldGenPass(LoadRealm));
 
-                if (CurrentSubworldPathFull != Main.ActiveWorldFileData.Path)
+                if (CurrentSubworldPathWld(activeRealm) != Main.ActiveWorldFileData.Path)
                     foreach (RealmFeature feature in activeRealm.realmFeatureList)
                         genlist.Add(new SubworldGenPass(feature.Generate));
 
@@ -125,9 +160,9 @@ namespace Realms
             } 
         }
         public void LoadRealm(GenerationProgress genMessage) =>
-            LoadWorldFile.Invoke(ModContent.GetInstance<SLWorld>(), new object[] { (CurrentSubworldPathFull), false });
+            LoadWorldFile.Invoke(ModContent.GetInstance<SLWorld>(), new object[] { CurrentSubworldPathWld(activeRealm), false });
         public void FinishRealm(GenerationProgress genMessage) =>
-            Main.ActiveWorldFileData = new Terraria.IO.WorldFileData(CurrentSubworldPathFull, false);
+            Main.ActiveWorldFileData = new Terraria.IO.WorldFileData(CurrentSubworldPathWld(activeRealm), false);
 
 
         //public override void OnVotedFor() => StartTeleportSequence();
