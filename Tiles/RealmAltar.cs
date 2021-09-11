@@ -91,9 +91,9 @@ namespace Realms.Tiles
 
 		public void OpenUI()
         {
-			if (AltarUI != null)//debug
-				AltarUI.Deactivate();//debug
-			//if (AltarUI == null)
+			//if (AltarUI != null)//debug
+			//	AltarUI.Deactivate();//debug
+			if (AltarUI == null)
 				AltarUI = new RealmAltarUI();
 
 			if (PlayerInRange)

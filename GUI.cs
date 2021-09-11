@@ -43,7 +43,11 @@ namespace Realms
 
             foreach (GUI ui in ActivationQueue)
                 if (!ActiveUIList.Contains(ui))
+                {
                     ActiveUIList.Add(ui);
+                    if (ui is GUI)
+                        (ui as GUI).OnActivate();
+                }
             ActivationQueue.Clear();
 
             foreach (GUI ui in ActiveUIList)
@@ -58,7 +62,11 @@ namespace Realms
 
             foreach (GUI ui in DeactivationQueue)
                 if (ActiveUIList.Contains(ui))
+                {
                     ActiveUIList.Remove(ui);
+                    if (ui is GUI)
+                        (ui as GUI).OnDeactivate();
+                }
             DeactivationQueue.Clear();
 
             LastMouseLeft = Main.mouseLeft;
@@ -302,19 +310,21 @@ namespace Realms
 
         public Func<Item, bool> itemAllowed;
 
-        public Item storedItem = new Item();
+        public Item StoredItem = new Item();
+        public Ref<Item> ItemReference;
 
-        public ItemSlot() { storedItem.TurnToAir(); }
+        public ItemSlot() { StoredItem.TurnToAir(); ItemReference = new Ref<Item>(StoredItem);
+        ItemReference.Value}
 
         public void TrySwapItem(ref Item item)
         {
             if(itemAllowed == null || itemAllowed(item))
             {
-                if(!storedItem.IsAir || !item.IsAir)//so sound doesn't play when clicking a empty slot
+                if(!StoredItem.IsAir || !item.IsAir)//so sound doesn't play when clicking a empty slot
                     Main.PlaySound(SoundID.Grab);
                 Item temp = item;
-                item = storedItem;
-                storedItem = temp;
+                item = StoredItem;
+                StoredItem = temp;
             }
         }
 
@@ -324,14 +334,14 @@ namespace Realms
             bool hasFocus = ParentUI.HasFocus();
 
             spriteBatch.Draw(slotTexture, rect, hasFocus ? slotColor : slotUnfocusedColor);
-            if (!storedItem.IsAir)
+            if (!StoredItem.IsAir)
             {
-                Texture2D tex = Main.itemTexture[storedItem.type];
+                Texture2D tex = Main.itemTexture[StoredItem.type];
                 Color texColor = hasFocus ? itemColor : itemUnfocusedColor;
-                Rectangle frame = Main.itemAnimations[storedItem.type] != null ? Main.itemAnimations[storedItem.type].GetFrame(tex) : tex.Frame();
+                Rectangle frame = Main.itemAnimations[StoredItem.type] != null ? Main.itemAnimations[StoredItem.type].GetFrame(tex) : tex.Frame();
                 Vector2 position = rect.TopLeft();
                 Vector2 origin = (frame.Size() - rect.Size()) / 2;
-                ModItem modItem = storedItem.modItem;
+                ModItem modItem = StoredItem.modItem;
 
                 if (modItem != null)
                 {
@@ -342,12 +352,12 @@ namespace Realms
                 else
                     spriteBatch.Draw(tex, position, frame, texColor, 0f, origin, 1f, default, default);
 
-                if(storedItem.stack > 1)
-                    Utils.DrawBorderString(spriteBatch, storedItem.stack.ToString(), rect.Center() - new Vector2(rect.Width / 3, 0), texColor);//TODO fix text offset
+                if(StoredItem.stack > 1)
+                    Utils.DrawBorderString(spriteBatch, StoredItem.stack.ToString(), rect.Center() - new Vector2(rect.Width / 3, 0), texColor);//TODO fix text offset
 
                 if (this.MouseOver())
                 {
-                    Main.HoverItem = storedItem;
+                    Main.HoverItem = StoredItem;
                     Main.instance.MouseTextHackZoom("", Main.rare, 1);
                 }
 
@@ -402,10 +412,20 @@ namespace Realms
 
         public virtual void OnCreate() { }
 
+        public virtual void OnActivate() { }
+
+        public virtual void OnDeactivate() { }
+
         public void AddElement(IUIElement element)
         {
             element.ParentUI = this;
             elements.Add(element);
+        }
+
+        public void RemoveElement(IUIElement element)
+        {
+            if (elements.Contains(element))
+                elements.Remove(element);
         }
 
         public virtual void Draw(SpriteBatch spriteBatch)

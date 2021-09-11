@@ -9,10 +9,40 @@ using Terraria.ModLoader;
 
 namespace Realms.UI
 {
+    public class EffectSlotContainer
+    {
+        public Ref<Item> effect;
+        public Ref<Item> location;
+    }
+
+    public class FeatureSlotContainer
+    {
+        public Ref<Item> feature;
+        public Ref<Item> rarity;
+        public Ref<Item> size;
+        public Ref<Item> freq;
+        public Ref<Item> location;
+        public List<Ref<Item>> tiles = new List<Ref<Item>>();
+        public PatternSlotContainer patternSlot = new PatternSlotContainer();
+    }
+
+    public class PatternSlotContainer
+    {
+        public Ref<Item> pattern;
+        public Ref<Item> freq;
+    }
+
+    public class MiscSlotContainer
+    {
+        public Ref<Item> misc;
+    }
+
     public class RealmAltarUI : GUI
     {
         const int mainUIWidth = 402;
         const int mainUIHeight = 332;
+
+        ItemSlot bookSlot;
 
         public override void OnCreate()
         {
@@ -55,17 +85,27 @@ namespace Realms.UI
 
             GUI ItemSlotPanel = new GUI() { backTexture = mainslotTex, Size = mainslotTex.Size(), Offset = new Vector2(-112, 0) };
             AddElement(ItemSlotPanel);
-            ItemSlotPanel.AddElement(new DragBar(ItemSlotPanel));
-            ItemSlotPanel.AddElement(new ItemSlot()
+            //ItemSlotPanel.AddElement(new DragBar(ItemSlotPanel));//debug and showing gui features
+            bookSlot = new ItemSlot()
             {
-                Size = new Vector2(24, 24),
-                Offset = new Vector2(40, 42),
+                itemAllowed = IsRealmItem,
+                Size = new Vector2(40, 40),
+                Offset = new Vector2(32, 34),
                 iconTexture = ModContent.GetTexture("Realms/UI/RealmUI/SlotIcon"),
                 slotTexture = Main.blackTileTexture,
                 slotColor = Color.Transparent,
                 slotUnfocusedColor = Color.Transparent,
-            });
+            };
+            ItemSlotPanel.AddElement(bookSlot);
         }
+
+        public override void OnDeactivate()
+        {
+            //bookSlot.storedItem.
+        }
+
+        private bool IsRealmItem(Item item) => 
+            item.IsAir || item.modItem is Items.RealmBook;
 
         private void EnterButtonClicked()
         {
