@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Realms.Effects;
 using Realms.UI;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Terraria;
 using Terraria.DataStructures;
@@ -89,12 +90,17 @@ namespace Realms.Tiles
 	{
 		public GUI AltarUI;
 
+		public List<EffectSlotContainer> effectList;//if these are null is directly tied to if altarui is null
+		public List<FeatureSlotContainer> featureList;
+		public List<MiscSlotContainer> miscList;
+		public RealmBookContainer realmBookContainer;
+
 		public void OpenUI()
         {
 			//if (AltarUI != null)//debug
 			//	AltarUI.Deactivate();//debug
 			if (AltarUI == null)
-				AltarUI = new RealmAltarUI();
+				AltarUI = new RealmAltarUI(this);
 
 			if (PlayerInRange)
 				AltarUI.Activate();
@@ -175,10 +181,5 @@ namespace Realms.Tiles
 
         protected override int ValidTileType => ModContent.TileType<RealmAltar>();
         protected override int TileSquareRange => 5;
-    }
-
-	public static class AltarUI
-    {
-		
     }
 }

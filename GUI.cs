@@ -313,8 +313,20 @@ namespace Realms
         public Item StoredItem = new Item();
         public Ref<Item> ItemReference;
 
-        public ItemSlot() { StoredItem.TurnToAir(); ItemReference = new Ref<Item>(StoredItem);
-        ItemReference.Value}
+        public ItemSlot() 
+        {
+            if (ItemReference != null)
+            {
+                if (ItemReference.Value == null)
+                {
+                    ItemReference.Value = new Item();
+                    ItemReference.Value.TurnToAir();
+                }
+                StoredItem = ItemReference.Value;
+            }
+            else
+                StoredItem.TurnToAir(); 
+        }
 
         public void TrySwapItem(ref Item item)
         {
@@ -325,6 +337,9 @@ namespace Realms
                 Item temp = item;
                 item = StoredItem;
                 StoredItem = temp;
+
+                if (ItemReference != null)
+                    ItemReference.Value = StoredItem;
             }
         }
 
