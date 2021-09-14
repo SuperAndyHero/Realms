@@ -12,6 +12,14 @@ using Terraria.ModLoader;
 namespace Realms.UI
 {
     #region containers
+    public class AltarItemData
+    {
+        public readonly List<EffectSlotContainer> effectList = new List<EffectSlotContainer>();
+        public readonly List<FeatureSlotContainer> featureList = new List<FeatureSlotContainer>();
+        public readonly List<MiscSlotContainer> miscList = new List<MiscSlotContainer>();
+        public readonly Ref<Item> realmBook = new Ref<Item>();
+    }
+
     public class EffectSlotContainer
     {
         public Ref<Item> effect = new Ref<Item>();
@@ -39,64 +47,126 @@ namespace Realms.UI
     {
         public Ref<Item> misc = new Ref<Item>();
     }
-
-    public class RealmBookContainer
-    {
-        public Ref<Item> realmBook = new Ref<Item>();
-    }
     #endregion
+
+    public class ExpandButton : Button
+    {
+        public bool boolValue = false;
+
+        public override void Draw(SpriteBatch spriteBatch)
+        {
+            bool hasFocus = ParentUI.HasFocus();
+            if (this.MouseOver() && hasFocus)
+                spriteBatch.Draw(highlightedTexture, RealPosition + highlightedTexture.Size() * 0.5f, null, highlightedColor, boolValue ? -1.57f : 0, highlightedTexture.Size() * 0.5f, 1f, default, default);
+            else
+                spriteBatch.Draw(texture, RealPosition + texture.Size() * 0.5f, null, hasFocus ? baseColor : unfocusedColor, boolValue ? -1.57f : 0, texture.Size() * 0.5f, 1f, default, default);
+        }
+
+        public override bool CheckHasInteracted(bool ClickReceived)
+        {
+            if (this.MouseOver() && ClickReceived)
+            {
+                boolValue = true;//boolValue = !boolValue; //old version allows for them all to be collasped
+                onClick?.Invoke();
+                return true;
+            }
+            return false;
+        }
+    }
 
     public class CollapsiblePanel : GUI
     {
-        const int collaspedHeight = 17;
-        const int fullHeight = 124;
-        const int moveOffset = 107;
+        public const int width = 362;
+        public const int collaspedHeight = 34;
+        const int fullHeight = 248;
+        const int moveOffset = 214;
 
         public List<CollapsiblePanel> panelList;
+
         private bool _expanded;
-        public bool Expanded { get => _expanded; set {RebuildHeight(); _expanded = value;} }
+        public bool Expanded { get => _expanded; set { _expanded = value; RebuildHeight();} }
 
         public int downOffset = 0;
 
-        public new Vector2 RealPosition { get => ParentUI.RealPosition + Offset + Vector2.UnitY * downOffset; }
+        public override Vector2 RealPosition { get => ParentUI.RealPosition + Offset + Vector2.UnitY * downOffset; }
 
 
         public void RebuildHeight()
         {
-            Size = new Vector2(Size.X, Expanded ? fullHeight : collaspedHeight);
-            foreach (CollapsiblePanel panel in panelList)
+            if (Expanded)
             {
+                Size = new Vector2(Size.X, fullHeight);
+                backTexture = ModContent.GetTexture("Realms/UI/RealmUI/PanelBackFull");
                 downOffset = 0;
-                if (panel == this)
-                    break;
-                else if (panel.Expanded == true)
+                button.boolValue = true;
+
+                foreach (CollapsiblePanel panel in panelList)
+                    if (panel != this)
+                        panel.Expanded = false;
+            }
+            else
+            {
+                Size = new Vector2(Size.X, collaspedHeight);
+                backTexture = ModContent.GetTexture("Realms/UI/RealmUI/PanelBack");
+                downOffset = 0;
+                button.boolValue = false;
+
+                bool past = false;
+                foreach (CollapsiblePanel panel in panelList)
                 {
-                    downOffset = moveOffset;
-                    break;
+                    if (panel == this)
+                        past = true;
+
+                    if (past)
+                        panel.downOffset = 0;
+                    else if (panel.Expanded == true)
+                    {
+                        downOffset = moveOffset;
+                        break;
+                    }
                 }
             }
         }
 
-        public CollapsiblePanel(List<CollapsiblePanel> panels) => 
+        public CollapsiblePanel(List<CollapsiblePanel> panels)
+        {
+            Size = new Vector2(width, collaspedHeight);
+            backTexture = ModContent.GetTexture("Realms/UI/RealmUI/PanelBack");
+
             panelList = panels;
+            if (!panelList.Contains(this))
+                panelList.Add(this);
+        }
+
+        public ExpandButton button;
+
+        public override void OnCreate()
+        {
+            Texture2D buttonTex = ModContent.GetTexture("Realms/UI/RealmUI/ExpandArrow");
+            button = new ExpandButton() { Offset = new Vector2(width - 30, 4), Size = new Vector2(26, 26), texture = buttonTex, highlightedTexture = buttonTex, onClick = Toggle };
+            AddElement(button);
+        }
+
+        private void Toggle() => 
+            Expanded = true; //Expanded = button.boolValue; //old version allows for them all to be collasped
     }
 
     public class RealmAltarUI : GUI
     {
         readonly AltarEntity altarEntity;
 
-        readonly List<EffectSlotContainer> effectList = new List<EffectSlotContainer>();
-        readonly List<FeatureSlotContainer> featureList = new List<FeatureSlotContainer>();
-        readonly List<MiscSlotContainer> miscList = new List<MiscSlotContainer>();
-        readonly RealmBookContainer realmBookContainer = new RealmBookContainer();
+        readonly AltarItemData itemdata;
 
         public RealmAltarUI(AltarEntity altar)
         {
             altarEntity = altar;
-            altarEntity.effectList = effectList;
-            altarEntity.featureList = featureList;
-            altarEntity.miscList = miscList;
-            altarEntity.realmBookContainer = realmBookContainer;
+
+            if (altarEntity.ItemData == null)
+                altarEntity.ItemData = new AltarItemData();
+
+            itemdata = altarEntity.ItemData;
+
+            PostCreate();
         }
 
         const int mainUIWidth = 402;
@@ -106,52 +176,50 @@ namespace Realms.UI
         const int featureSlotCount = 9;
         const int miscSlotCount = 9;
 
+        readonly List<CollapsiblePanel> panelList = new List<CollapsiblePanel>();
 
-
-        public override void OnCreate()
+        public void PostCreate()//oncreate gets called by the base ctor, so this method was made to be able to access the info passed in when this is created
         {
             backTexture = ModContent.GetTexture("Realms/UI/RealmUI/MainBackground");
             Size = new Vector2(mainUIWidth, mainUIHeight);
             Offset = (new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f) - (new Vector2(mainUIWidth + 200, mainUIHeight) * 0.5f);
 
-            AddElement(new CloseButton(this) { texture = ModContent.GetTexture("Realms/UI/RealmUI/Close"), Offset = new Vector2(Size.X - 21, 11), baseColor = Color.LightGray});
-            AddElement(new DragBar(this) { Size = new Vector2(Size.X - 28, 16)});
-            AddElement(new HoverText() { Size = new Vector2(Size.X - 28, 16), TextString = "Your balls. Hand em over." });
-            Texture2D mainslotTex = ModContent.GetTexture("Realms/UI/RealmUI/MainSlot");
+            AddElement(new CloseButton(this) { texture = ModContent.GetTexture("Realms/UI/RealmUI/Close"), Offset = new Vector2(Size.X - 21, 11), baseColor = Color.LightGray });
+            AddElement(new DragBar(this) { Size = new Vector2(Size.X - 28, 16) });
 
             #region debugbuttons
             AddElement(new Button()
             {
-                Offset = new Vector2(10, 160),
+                Offset = new Vector2(-130, 160),
                 Size = new Vector2(100, 25),
                 onClick = EnterButtonClicked,
             });
             AddElement(new UIText()
             {
-                Offset = new Vector2(10, 162),
+                Offset = new Vector2(-130, 162),
                 TextString = "Enter Realm"
             });
 
             AddElement(new Button()
             {
-                Offset = new Vector2(138, 160),
+                Offset = new Vector2(-200, 160),
                 Size = new Vector2(53, 25),
                 onClick = CreateButtonClicked,
             });
             AddElement(new UIText()
             {
-                Offset = new Vector2(138, 162),
+                Offset = new Vector2(-200, 162),
                 TextString = "Create"
             });
             #endregion
 
-
+            Texture2D mainslotTex = ModContent.GetTexture("Realms/UI/RealmUI/MainSlot");
             GUI ItemSlotPanel = new GUI() { backTexture = mainslotTex, Size = mainslotTex.Size(), Offset = new Vector2(-112, 0) };
             AddElement(ItemSlotPanel);
             //ItemSlotPanel.AddElement(new DragBar(ItemSlotPanel));//debug and showing gui features
             ItemSlotPanel.AddElement(new ItemSlot()
             {
-                ItemReference = realmBookContainer.realmBook,
+                ItemReference = itemdata.realmBook,
                 itemAllowed = IsRealmItem,
                 Size = new Vector2(40, 40),
                 Offset = new Vector2(32, 34),
@@ -160,11 +228,23 @@ namespace Realms.UI
                 slotColor = Color.Transparent,
                 slotUnfocusedColor = Color.Transparent,
             });
+
+            AddElement(new CollapsiblePanel(panelList) { Offset = new Vector2(6, 6) });
+
+            AddElement(new CollapsiblePanel(panelList) { Offset = new Vector2(6, 8 + CollapsiblePanel.collaspedHeight) });
+
+            AddElement(new CollapsiblePanel(panelList) { Offset = new Vector2(6, 10 + CollapsiblePanel.collaspedHeight * 2) });
+            panelList[panelList.Count - 1].Expanded = true;
+
+
+
+
+            AddElement(new HoverText() { Size = new Vector2(Size.X - 28, 16), TextString = "Terraria privilege revoked." });
         }
 
         public override void OnDeactivate()
         {
-            //bookSlot.storedItem.
+            
         }
 
         private bool IsRealmItem(Item item) => 
@@ -172,7 +252,7 @@ namespace Realms.UI
 
         private void EnterButtonClicked()
         {
-
+            panelList[0].Expanded = true;
         }
 
         private void CreateButtonClicked()

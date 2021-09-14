@@ -233,6 +233,33 @@ namespace Realms
         }
     }
 
+    public class ToggleButton : Button //simple toggle button, missing some features that may be needed
+    {
+        public Texture2D toggledTexture = Main.blackTileTexture;
+        public Texture2D toggledhighlightedTexture = Main.blackTileTexture;
+        public bool boolValue = false;
+
+        public override void Draw(SpriteBatch spriteBatch)
+        {
+            bool hasFocus = ParentUI.HasFocus();
+            if (this.MouseOver() && !Main.mouseLeft && hasFocus)
+                spriteBatch.Draw(boolValue ? toggledhighlightedTexture : highlightedTexture, this.GetRect(), highlightedColor);
+            else
+                spriteBatch.Draw(boolValue ? toggledTexture : texture, this.GetRect(), hasFocus ? baseColor : unfocusedColor);
+        }
+
+        public override bool CheckHasInteracted(bool ClickReceived)
+        {
+            if (this.MouseOver() && ClickReceived)
+            {
+                boolValue = !boolValue;
+                onClick?.Invoke();
+                return true;
+            }
+            return false;
+        }
+    }
+
     public class UIText : IUIElement
     {
         public IUIElement ParentUI { get; set; }
@@ -411,7 +438,7 @@ namespace Realms
         public IUIElement ParentUI { get; set; } = UIHandler.EmptyElement;
         public Vector2 Size { get; set; } = new Vector2(100, 100);
         public Vector2 Offset { get; set; } = Vector2.Zero;
-        public Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }
+        public virtual Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }//virtual for anything that cant be set on creation
 
         public Texture2D backTexture = Main.blackTileTexture;
         public Color focusedColor = Color.White;

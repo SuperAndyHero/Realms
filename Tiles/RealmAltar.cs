@@ -90,16 +90,13 @@ namespace Realms.Tiles
 	{
 		public GUI AltarUI;
 
-		public List<EffectSlotContainer> effectList;//if these are null is directly tied to if altarui is null
-		public List<FeatureSlotContainer> featureList;
-		public List<MiscSlotContainer> miscList;
-		public RealmBookContainer realmBookContainer;
+		public AltarItemData ItemData;
 
 		public void OpenUI()
         {
-			//if (AltarUI != null)//debug
-			//	AltarUI.Deactivate();//debug
-			if (AltarUI == null)
+			if (AltarUI != null)//debug
+				AltarUI.Deactivate();//debug
+			//if (AltarUI == null)
 				AltarUI = new RealmAltarUI(this);
 
 			if (PlayerInRange)
