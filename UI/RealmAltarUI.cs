@@ -74,6 +74,54 @@ namespace Realms.UI
         }
     }
 
+    public class MiscPanel : GUI
+    {
+        readonly AltarItemData itemdata;
+        public List<MiscSlotRow> rowList = new List<MiscSlotRow>();
+        public MiscPanel(AltarItemData data)
+        {
+            itemdata = data;
+            AddElement(new MiscSlotRow(itemdata, rowList) { Offset = new Vector2(0, 60) });
+            AddElement(new MiscSlotRow(itemdata, rowList) { Offset = new Vector2(0, 60) });
+        }
+    }
+
+    public class MiscSlotRow : GUI
+    {
+        const int miscSlotCount = 9;
+
+        readonly AltarItemData itemdata;
+        public List<MiscSlotRow> rowList;
+
+        public MiscSlotRow(AltarItemData data, List<MiscSlotRow> list)
+        {
+            itemdata = data;
+            rowList = list;
+
+            int listOffset = rowList.Count * miscSlotCount;
+
+            if (!rowList.Contains(this))
+                rowList.Add(this);
+
+            if(itemdata.miscList.Count > rowList.Count * miscSlotCount)
+            {
+                int missingCount = (rowList.Count * miscSlotCount) - itemdata.miscList.Count;
+                for (int i = 0; i < missingCount; i++)
+                {
+                    itemdata.miscList.Add(new MiscSlotContainer());
+                }
+            }
+
+            Vector2 allOffset = new Vector2(10, 10);
+
+            for (int i = 0; i < miscSlotCount; i++)
+            {
+                AddElement(new ItemSlot() { Offset = new Vector2(32 * i, 0) + allOffset, Size = new Vector2(24, 24), 
+                    ItemReference = itemdata.miscList[i + listOffset].misc });
+            }
+        }
+    }
+
     public class CollapsiblePanel : GUI
     {
         public const int width = 362;
@@ -81,7 +129,6 @@ namespace Realms.UI
         const int fullHeight = 248;
         const int moveOffset = 214;
 
-        public List<CollapsiblePanel> panelList;
 
         private bool _expanded;
         public bool Expanded { get => _expanded; set { _expanded = value; RebuildHeight();} }
@@ -128,23 +175,24 @@ namespace Realms.UI
             }
         }
 
-        public CollapsiblePanel(List<CollapsiblePanel> panels)
+        public ExpandButton button;
+        public Texture2D titleTex;
+        public List<CollapsiblePanel> panelList;
+
+        public CollapsiblePanel(List<CollapsiblePanel> panels, Texture2D title)
         {
             Size = new Vector2(width, collaspedHeight);
             backTexture = ModContent.GetTexture("Realms/UI/RealmUI/PanelBack");
 
+            titleTex = title;
             panelList = panels;
             if (!panelList.Contains(this))
                 panelList.Add(this);
-        }
 
-        public ExpandButton button;
-
-        public override void OnCreate()
-        {
             Texture2D buttonTex = ModContent.GetTexture("Realms/UI/RealmUI/ExpandArrow");
             button = new ExpandButton() { Offset = new Vector2(width - 30, 4), Size = new Vector2(26, 26), texture = buttonTex, highlightedTexture = buttonTex, onClick = Toggle };
             AddElement(button);
+            AddElement(new UISprite() {Size = new Vector2(134, 26), Offset = new Vector2(4, 4 ), texture = titleTex});
         }
 
         private void Toggle() => 
@@ -174,7 +222,6 @@ namespace Realms.UI
 
         const int effectSlotCount = 7;
         const int featureSlotCount = 9;
-        const int miscSlotCount = 9;
 
         readonly List<CollapsiblePanel> panelList = new List<CollapsiblePanel>();
 
@@ -229,11 +276,11 @@ namespace Realms.UI
                 slotUnfocusedColor = Color.Transparent,
             });
 
-            AddElement(new CollapsiblePanel(panelList) { Offset = new Vector2(6, 6) });
+            AddElement(new CollapsiblePanel(panelList, ModContent.GetTexture("Realms/UI/RealmUI/Features")) { Offset = new Vector2(6, 6) });
 
-            AddElement(new CollapsiblePanel(panelList) { Offset = new Vector2(6, 8 + CollapsiblePanel.collaspedHeight) });
+            AddElement(new CollapsiblePanel(panelList, ModContent.GetTexture("Realms/UI/RealmUI/Effects")) { Offset = new Vector2(6, 8 + CollapsiblePanel.collaspedHeight) });
 
-            AddElement(new CollapsiblePanel(panelList) { Offset = new Vector2(6, 10 + CollapsiblePanel.collaspedHeight * 2) });
+            AddElement(new CollapsiblePanel(panelList, ModContent.GetTexture("Realms/UI/RealmUI/Misc")) { Offset = new Vector2(6, 10 + CollapsiblePanel.collaspedHeight * 2) });
             panelList[panelList.Count - 1].Expanded = true;
 
 
