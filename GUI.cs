@@ -338,18 +338,20 @@ namespace Realms
         public Func<Item, bool> itemAllowed;
 
         public Item StoredItem = new Item();
-        public Ref<Item> ItemReference;
+        private readonly Ref<Item> itemReference;
 
-        public ItemSlot() 
+        public ItemSlot(Ref<Item> itemRef = null) 
         {
-            if (ItemReference != null)
+            if (itemRef != null)
             {
-                if (ItemReference.Value == null)
+                itemReference = itemRef;
+
+                if (itemReference.Value == null)
                 {
-                    ItemReference.Value = new Item();
-                    ItemReference.Value.TurnToAir();
+                    itemReference.Value = new Item();
+                    itemReference.Value.TurnToAir();
                 }
-                StoredItem = ItemReference.Value;
+                StoredItem = itemReference.Value;
             }
             else
                 StoredItem.TurnToAir(); 
@@ -365,8 +367,8 @@ namespace Realms
                 item = StoredItem;
                 StoredItem = temp;
 
-                if (ItemReference != null)
-                    ItemReference.Value = StoredItem;
+                if (itemReference != null)
+                    itemReference.Value = StoredItem;
             }
         }
 
@@ -459,9 +461,12 @@ namespace Realms
         public virtual void OnDeactivate() { }
 
         public void AddElement(IUIElement element)
-        {
-            element.ParentUI = this;
-            elements.Add(element);
+        {   
+            if (!elements.Contains(element))
+            {
+                element.ParentUI = this;
+                elements.Add(element);
+            }
         }
 
         public void RemoveElement(IUIElement element)
@@ -482,19 +487,19 @@ namespace Realms
 
         public virtual bool CheckHasInteracted(bool ClickReceived)
         {
-                bool mouseOver = this.MouseOver();
-                bool interacted = false;
+            bool mouseOver = this.MouseOver();
+            bool interacted = false;
 
-                foreach (IUIElement element in elements)
-                {
-                    if (element.CheckHasInteracted(ClickReceived))
-                        interacted = true;
-                }
+            foreach (IUIElement element in elements)
+            {
+                if (element.CheckHasInteracted(ClickReceived))
+                    interacted = true;
+            }
 
-                if(mouseOver || interacted)
-                    UIHandler.BlockItemUse();
+            if(mouseOver || interacted)
+                UIHandler.BlockItemUse();
 
-                return (mouseOver && ClickReceived) || interacted;
+            return (mouseOver && ClickReceived) || interacted;
         }
     }
 }

@@ -74,36 +74,141 @@ namespace Realms.UI
         }
     }
 
+    public class ActionItemSlot : ItemSlot 
+    {
+        public Action<ActionItemSlot> clickAction;
+
+        public ActionItemSlot(Action<ActionItemSlot> method, Ref<Item> itemRef = null) : base(itemRef) =>
+            clickAction = method;
+
+        public override bool CheckHasInteracted(bool ClickReceived)
+        {
+            if (base.CheckHasInteracted(ClickReceived))
+            {
+                clickAction.Invoke(this);
+                return true;
+            }
+            return false;
+        }
+    }
+
+
+    public class EffectPanel : GUI
+    {
+        readonly AltarItemData itemdata;
+        public List<IUIElement> rowList = new List<IUIElement>();
+
+        const int defaultRows = 3;
+        public EffectPanel(AltarItemData data)
+        {
+            itemdata = data;
+            Offset = new Vector2(6, 36);
+            focusedColor = Color.Transparent;
+            unfocusedColor = Color.Transparent;
+            for (int i = 0; i < defaultRows; i++)
+            {
+                AddElement(new EffectSlotRow(itemdata, rowList) { Offset = new Vector2(0, i * 44) });
+            }
+        }
+    }
+
+    public class EffectSlotRow : GUI
+    {
+        const int effectSlotCount = 8;
+
+        readonly AltarItemData itemdata;
+        public List<IUIElement> rowList;
+
+        public EffectSlotRow(AltarItemData data, List<IUIElement> list)
+        {
+            itemdata = data;
+            rowList = list;
+            focusedColor = Color.Transparent;
+            unfocusedColor = Color.Transparent;
+
+            int listOffset = rowList.Count * effectSlotCount;
+
+            if (!rowList.Contains(this))
+                rowList.Add(this);
+
+            if (itemdata.effectList.Count < rowList.Count * effectSlotCount)
+            {
+                int missingCount = (rowList.Count * effectSlotCount) - itemdata.effectList.Count;
+                for (int i = 0; i < missingCount; i++)
+                {
+                    itemdata.effectList.Add(new EffectSlotContainer());
+                }
+            }
+
+            for (int i = 0; i < effectSlotCount; i++)
+            {
+                AddElement(new ActionItemSlot(RenameThis, itemdata.effectList[i + listOffset].effect)
+                {
+                    Offset = new Vector2(40 * i, 0),
+                    Size = new Vector2(40, 40),
+                    iconTexture = ModContent.GetTexture("Realms/UI/RealmUI/SlotIcon"),
+                    slotTexture = ModContent.GetTexture("Realms/UI/RealmUI/Slot")
+                });
+            }
+        }
+
+        public IUIElement selectedSlot = null;
+
+        private void RenameThis(ActionItemSlot slot)
+        {
+            selectedSlot = slot;
+        }
+
+        public override bool CheckHasInteracted(bool ClickReceived)
+        {
+            if (base.CheckHasInteracted(ClickReceived))
+            {
+                //selectedSlot = null;//todo try this
+                return true;
+            }
+            return false;
+        }
+    }
+
     public class MiscPanel : GUI
     {
         readonly AltarItemData itemdata;
-        public List<MiscSlotRow> rowList = new List<MiscSlotRow>();
+        public List<IUIElement> rowList = new List<IUIElement>();
+
+        const int defaultRows = 3;
         public MiscPanel(AltarItemData data)
         {
             itemdata = data;
-            AddElement(new MiscSlotRow(itemdata, rowList) { Offset = new Vector2(0, 60) });
-            AddElement(new MiscSlotRow(itemdata, rowList) { Offset = new Vector2(0, 60) });
+            Offset = new Vector2(6, 36);
+            focusedColor = Color.Transparent;
+            unfocusedColor = Color.Transparent;
+            for (int i = 0; i < defaultRows; i++)
+            {
+                AddElement(new MiscSlotRow(itemdata, rowList) { Offset = new Vector2(0, i * 44) });
+            }
         }
     }
 
     public class MiscSlotRow : GUI
     {
-        const int miscSlotCount = 9;
+        const int miscSlotCount = 8;
 
         readonly AltarItemData itemdata;
-        public List<MiscSlotRow> rowList;
+        public List<IUIElement> rowList;
 
-        public MiscSlotRow(AltarItemData data, List<MiscSlotRow> list)
+        public MiscSlotRow(AltarItemData data, List<IUIElement> list)
         {
             itemdata = data;
             rowList = list;
+            focusedColor = Color.Transparent;
+            unfocusedColor = Color.Transparent;
 
             int listOffset = rowList.Count * miscSlotCount;
 
             if (!rowList.Contains(this))
                 rowList.Add(this);
 
-            if(itemdata.miscList.Count > rowList.Count * miscSlotCount)
+            if(itemdata.miscList.Count < rowList.Count * miscSlotCount)
             {
                 int missingCount = (rowList.Count * miscSlotCount) - itemdata.miscList.Count;
                 for (int i = 0; i < missingCount; i++)
@@ -112,15 +217,17 @@ namespace Realms.UI
                 }
             }
 
-            Vector2 allOffset = new Vector2(10, 10);
-
             for (int i = 0; i < miscSlotCount; i++)
             {
-                AddElement(new ItemSlot() { Offset = new Vector2(32 * i, 0) + allOffset, Size = new Vector2(24, 24), 
-                    ItemReference = itemdata.miscList[i + listOffset].misc });
+                AddElement(new ItemSlot(itemdata.miscList[i + listOffset].misc) { 
+                    Offset = new Vector2(40 * i, 0), 
+                    Size = new Vector2(40, 40),
+                    iconTexture = ModContent.GetTexture("Realms/UI/RealmUI/SlotIcon"),
+                    slotTexture = ModContent.GetTexture("Realms/UI/RealmUI/Slot") });
             }
         }
     }
+
 
     public class CollapsiblePanel : GUI
     {
@@ -147,6 +254,8 @@ namespace Realms.UI
                 downOffset = 0;
                 button.boolValue = true;
 
+                AddElement(SlotPanel);
+
                 foreach (CollapsiblePanel panel in panelList)
                     if (panel != this)
                         panel.Expanded = false;
@@ -157,6 +266,8 @@ namespace Realms.UI
                 backTexture = ModContent.GetTexture("Realms/UI/RealmUI/PanelBack");
                 downOffset = 0;
                 button.boolValue = false;
+
+                RemoveElement(SlotPanel);
 
                 bool past = false;
                 foreach (CollapsiblePanel panel in panelList)
@@ -178,8 +289,9 @@ namespace Realms.UI
         public ExpandButton button;
         public Texture2D titleTex;
         public List<CollapsiblePanel> panelList;
+        public IUIElement SlotPanel;
 
-        public CollapsiblePanel(List<CollapsiblePanel> panels, Texture2D title)
+        public CollapsiblePanel(List<CollapsiblePanel> panels, Texture2D title, IUIElement slotObject)
         {
             Size = new Vector2(width, collaspedHeight);
             backTexture = ModContent.GetTexture("Realms/UI/RealmUI/PanelBack");
@@ -193,11 +305,13 @@ namespace Realms.UI
             button = new ExpandButton() { Offset = new Vector2(width - 30, 4), Size = new Vector2(26, 26), texture = buttonTex, highlightedTexture = buttonTex, onClick = Toggle };
             AddElement(button);
             AddElement(new UISprite() {Size = new Vector2(134, 26), Offset = new Vector2(4, 4 ), texture = titleTex});
+            SlotPanel = slotObject;
         }
 
         private void Toggle() => 
             Expanded = true; //Expanded = button.boolValue; //old version allows for them all to be collasped
     }
+
 
     public class RealmAltarUI : GUI
     {
@@ -219,9 +333,6 @@ namespace Realms.UI
 
         const int mainUIWidth = 402;
         const int mainUIHeight = 332;
-
-        const int effectSlotCount = 7;
-        const int featureSlotCount = 9;
 
         readonly List<CollapsiblePanel> panelList = new List<CollapsiblePanel>();
 
@@ -264,9 +375,8 @@ namespace Realms.UI
             GUI ItemSlotPanel = new GUI() { backTexture = mainslotTex, Size = mainslotTex.Size(), Offset = new Vector2(-112, 0) };
             AddElement(ItemSlotPanel);
             //ItemSlotPanel.AddElement(new DragBar(ItemSlotPanel));//debug and showing gui features
-            ItemSlotPanel.AddElement(new ItemSlot()
+            ItemSlotPanel.AddElement(new ItemSlot(itemdata.realmBook)
             {
-                ItemReference = itemdata.realmBook,
                 itemAllowed = IsRealmItem,
                 Size = new Vector2(40, 40),
                 Offset = new Vector2(32, 34),
@@ -276,11 +386,16 @@ namespace Realms.UI
                 slotUnfocusedColor = Color.Transparent,
             });
 
-            AddElement(new CollapsiblePanel(panelList, ModContent.GetTexture("Realms/UI/RealmUI/Features")) { Offset = new Vector2(6, 6) });
+            IUIElement thing = new MiscPanel(itemdata);//debug
 
-            AddElement(new CollapsiblePanel(panelList, ModContent.GetTexture("Realms/UI/RealmUI/Effects")) { Offset = new Vector2(6, 8 + CollapsiblePanel.collaspedHeight) });
+            AddElement(new CollapsiblePanel(panelList, ModContent.GetTexture("Realms/UI/RealmUI/Features"),
+                thing) { Offset = new Vector2(6, 6) });
 
-            AddElement(new CollapsiblePanel(panelList, ModContent.GetTexture("Realms/UI/RealmUI/Misc")) { Offset = new Vector2(6, 10 + CollapsiblePanel.collaspedHeight * 2) });
+            AddElement(new CollapsiblePanel(panelList, ModContent.GetTexture("Realms/UI/RealmUI/Effects"),
+                new EffectPanel(itemdata)) { Offset = new Vector2(6, 8 + CollapsiblePanel.collaspedHeight) });
+
+            AddElement(new CollapsiblePanel(panelList, ModContent.GetTexture("Realms/UI/RealmUI/Misc"),
+                thing) { Offset = new Vector2(6, 10 + CollapsiblePanel.collaspedHeight * 2) });
             panelList[panelList.Count - 1].Expanded = true;
 
 
