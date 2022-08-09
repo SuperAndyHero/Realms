@@ -139,13 +139,13 @@ namespace Realms
             orig(self, obj);
         }
 
-        public override void PostUpdateEverything() =>
+        public override void PostUpdateEverything()/* tModPorter Note: Removed. Use ModSystem.PostUpdateEverything */ =>
             ModelHandler.Update();
 
-        public override void UpdateUI(GameTime gameTime) =>
+        public override void UpdateUI(GameTime gameTime)/* tModPorter Note: Removed. Use ModSystem.UpdateUI */ =>
             UIHandler.Update();
 
-        public override void PostDrawInterface(SpriteBatch spriteBatch) =>
+        public override void PostDrawInterface(SpriteBatch spriteBatch)/* tModPorter Note: Removed. Use ModSystem.PostDrawInterface */ =>
             UIHandler.Draw(spriteBatch);
     }
 }

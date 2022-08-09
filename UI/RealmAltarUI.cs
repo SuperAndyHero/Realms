@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.ModLoader;
 
 namespace Realms.UI
@@ -381,7 +382,7 @@ namespace Realms.UI
                 Size = new Vector2(40, 40),
                 Offset = new Vector2(32, 34),
                 iconTexture = ModContent.GetTexture("Realms/UI/RealmUI/SlotIcon"),
-                slotTexture = Main.blackTileTexture,
+                slotTexture = TextureAssets.BlackTile.Value,
                 slotColor = Color.Transparent,
                 slotUnfocusedColor = Color.Transparent,
             });
@@ -410,7 +411,7 @@ namespace Realms.UI
         }
 
         private bool IsRealmItem(Item item) => 
-            item.IsAir || item.modItem is Items.RealmBook;
+            item.IsAir || item.ModItem is Items.RealmBook;
 
         private void EnterButtonClicked()
         {

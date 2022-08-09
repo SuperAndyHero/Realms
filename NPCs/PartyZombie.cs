@@ -14,34 +14,34 @@ namespace Realms.NPCs
 		}
 
 		public override void SetDefaults() {
-			npc.width = 18;
-			npc.height = 40;
-			npc.damage = 14;
-			npc.defense = 6;
-			npc.lifeMax = 200;
-			npc.HitSound = SoundID.NPCHit1;
-			npc.DeathSound = SoundID.NPCDeath2;
-			npc.value = 60f;
-			npc.knockBackResist = 0.5f;
-			npc.aiStyle = -1;
-			aiType = -1;
-			npc.noGravity = true;
-			npc.friendly = true;
-			banner = Item.NPCtoBanner(NPCID.Zombie);
-			bannerItem = Item.BannerToItem(banner);
+			NPC.width = 18;
+			NPC.height = 40;
+			NPC.damage = 14;
+			NPC.defense = 6;
+			NPC.lifeMax = 200;
+			NPC.HitSound = SoundID.NPCHit1;
+			NPC.DeathSound = SoundID.NPCDeath2;
+			NPC.value = 60f;
+			NPC.knockBackResist = 0.5f;
+			NPC.aiStyle = -1;
+			AIType = -1;
+			NPC.noGravity = true;
+			NPC.friendly = true;
+			Banner = Item.NPCtoBanner(NPCID.Zombie);
+			BannerItem = Item.BannerToItem(Banner);
 		}
 
         public override void AI()
         {
-			npc.position.X += (Vector2.Normalize(Main.LocalPlayer.position - npc.position) * 0.75f).X;
-			npc.ai[0]++;
+			NPC.position.X += (Vector2.Normalize(Main.LocalPlayer.position - NPC.position) * 0.75f).X;
+			NPC.ai[0]++;
 		}
 
-        public override bool PreDraw(SpriteBatch spriteBatch, Color drawColor)
+        public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
 			Main.graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-			float scaling = MathHelper.Clamp(npc.ai[0] / 800f, 0, 0.5f);
-			Vector3 off = (new Vector3((npc.Center - Main.screenPosition) - Main.ViewSize / 2, 0) * new Vector3(1, -1, 1)) - new Vector3(0, 200 * scaling, 0);
+			float scaling = MathHelper.Clamp(NPC.ai[0] / 800f, 0, 0.5f);
+			Vector3 off = (new Vector3((NPC.Center - Main.screenPosition) - Main.ViewSize / 2, 0) * new Vector3(1, -1, 1)) - new Vector3(0, 200 * scaling, 0);
 			ContentHandler.GetModel("Realms/Models/Sans").Draw(Matrix.CreateScale(scaling) * Matrix.CreateRotationY(Main.GameUpdateCount / 30f) * Matrix.CreateTranslation(off),
 				Matrix.CreateLookAt(new Vector3(0, 0, 100), new Vector3(0, 0, 0), Vector3.UnitY),
 				Matrix.CreateOrthographic(Main.screenWidth, Main.screenHeight, -100, 1000));

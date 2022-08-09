@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Terraria;
 using Terraria.ModLoader;
-using Terraria.World.Generation;
 using Microsoft.Xna.Framework;
 using Terraria.DataStructures;
 using Microsoft.Xna.Framework.Graphics;
@@ -18,6 +17,7 @@ using Realms.RealmData.RealmFeatures;
 using Terraria.ModLoader.IO;
 using Realms.RealmData.BlockPatterns;
 using Realms.UI;
+using Terraria.WorldBuilding;
 
 namespace Realms.Items
 {
@@ -30,24 +30,24 @@ namespace Realms.Items
 
         public override void SetDefaults()
         {
-            item.width = 18;
-            item.height = 18;
-            item.rare = ItemRarityID.Green;
-            item.useTime = 20;
-            item.useAnimation = 20;
-            item.useStyle = ItemUseStyleID.HoldingUp;
+            Item.width = 18;
+            Item.height = 18;
+            Item.rare = ItemRarityID.Green;
+            Item.useTime = 20;
+            Item.useAnimation = 20;
+            Item.useStyle = ItemUseStyleID.HoldUp;
         }
 
         public RealmInfo realmInfo;
         public DebugBookUI DebugUI;
 
-        public override TagCompound Save()
+        public override void SaveData(TagCompound tag)/* tModPorter Suggestion: Edit tag parameter instead of returning new TagCompound */
         {
             if (realmInfo != null)
                 return RealmInfo.Save(realmInfo);
-            return base.Save();
+            return base.SaveData();
         }
-        public override void Load(TagCompound tag)
+        public override void LoadData(TagCompound tag)
         {
             if(tag.ContainsKey("realmInfo"))
                 realmInfo = RealmInfo.Load(tag);
@@ -56,11 +56,11 @@ namespace Realms.Items
         public override void UpdateInventory(Player player)
         {
             if(realmInfo != null)
-                item.SetNameOverride(realmInfo.DisplayName);
+                Item.SetNameOverride(realmInfo.DisplayName);
         }
 
         public override bool AltFunctionUse(Player player) => true;
-        public override bool UseItem(Player player)
+        public override bool? UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */
         {
 
             if (DebugUI == null)

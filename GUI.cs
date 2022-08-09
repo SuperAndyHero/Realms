@@ -5,8 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Terraria;
+using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.Enums;
+using Terraria.GameContent;
 using Terraria.Graphics.Effects;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -159,7 +161,7 @@ namespace Realms
         public Vector2 Offset { get; set; } = Vector2.Zero;
         public Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }
 
-        public Texture2D texture = Main.blackTileTexture;
+        public Texture2D texture = TextureAssets.BlackTile.Value;
         //TODO unfocused color
         public Color baseColor = Color.Transparent;
         public Color highlightedColor = Color.LightGoldenrodYellow * 0.25f;
@@ -206,9 +208,9 @@ namespace Realms
         public Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }
 
         public Color unfocusedColor = Color.DimGray;
-        public Texture2D texture = Main.blackTileTexture;
+        public Texture2D texture = TextureAssets.BlackTile.Value;
         public Color baseColor = Color.LightGray;
-        public Texture2D highlightedTexture = Main.blackTileTexture;
+        public Texture2D highlightedTexture = TextureAssets.BlackTile.Value;
         public Color highlightedColor = Color.White;
 
         public Action onClick;
@@ -235,8 +237,8 @@ namespace Realms
 
     public class ToggleButton : Button //simple toggle button, missing some features that may be needed
     {
-        public Texture2D toggledTexture = Main.blackTileTexture;
-        public Texture2D toggledhighlightedTexture = Main.blackTileTexture;
+        public Texture2D toggledTexture = TextureAssets.BlackTile.Value;
+        public Texture2D toggledhighlightedTexture = TextureAssets.BlackTile.Value;
         public bool boolValue = false;
 
         public override void Draw(SpriteBatch spriteBatch)
@@ -285,7 +287,7 @@ namespace Realms
         public Vector2 Offset { get; set; } = Vector2.Zero;
         public Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }
 
-        public Texture2D texture = Main.blackTileTexture;
+        public Texture2D texture = TextureAssets.BlackTile.Value;
         public Color baseColor = Color.White;
         public Color unfocusedColor = Color.Gray;
 
@@ -324,7 +326,7 @@ namespace Realms
         public Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }
 
 
-        public Texture2D slotTexture = Main.inventoryBackTexture;
+        public Texture2D slotTexture = TextureAssets.InventoryBack.Value;
         public Color slotColor = Color.White;
         public Color slotUnfocusedColor = Color.Gray;
 
@@ -362,7 +364,7 @@ namespace Realms
             if(itemAllowed == null || itemAllowed(item))
             {
                 if(!StoredItem.IsAir || !item.IsAir)//so sound doesn't play when clicking a empty slot
-                    Main.PlaySound(SoundID.Grab);
+                    SoundEngine.PlaySound(SoundID.Grab);
                 Item temp = item;
                 item = StoredItem;
                 StoredItem = temp;
@@ -380,12 +382,12 @@ namespace Realms
             spriteBatch.Draw(slotTexture, rect, hasFocus ? slotColor : slotUnfocusedColor);
             if (!StoredItem.IsAir)
             {
-                Texture2D tex = Main.itemTexture[StoredItem.type];
+                Texture2D tex = TextureAssets.Item[StoredItem.type].Value;
                 Color texColor = hasFocus ? itemColor : itemUnfocusedColor;
                 Rectangle frame = Main.itemAnimations[StoredItem.type] != null ? Main.itemAnimations[StoredItem.type].GetFrame(tex) : tex.Frame();
                 Vector2 position = rect.TopLeft();
                 Vector2 origin = (frame.Size() - rect.Size()) / 2;
-                ModItem modItem = StoredItem.modItem;
+                ModItem modItem = StoredItem.ModItem;
 
                 if (modItem != null)
                 {
@@ -442,7 +444,7 @@ namespace Realms
         public Vector2 Offset { get; set; } = Vector2.Zero;
         public virtual Vector2 RealPosition { get => ParentUI.RealPosition + Offset; }//virtual for anything that cant be set on creation
 
-        public Texture2D backTexture = Main.blackTileTexture;
+        public Texture2D backTexture = TextureAssets.BlackTile.Value;
         public Color focusedColor = Color.White;
         public Color unfocusedColor = Color.Gray;
 

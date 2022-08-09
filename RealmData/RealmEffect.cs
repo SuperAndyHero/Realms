@@ -1,4 +1,3 @@
-using Terraria.World.Generation;
 using System.Collections.Generic;
 using Terraria.Utilities;
 using Terraria;
@@ -9,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Drawing;
 using Microsoft.Xna.Framework;
 using Terraria.DataStructures;
+using Terraria.WorldBuilding;
 
 namespace Realms.RealmData
 {

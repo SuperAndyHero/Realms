@@ -20,7 +20,7 @@ namespace Realms.Tiles
 {
 	public class RealmAltar : ModTile
 	{
-		public override void SetDefaults()
+		public override void SetStaticDefaults()
 		{
 			Main.tileSolid[Type] = false;
 			Main.tileMergeDirt[Type] = false;
@@ -31,8 +31,8 @@ namespace Realms.Tiles
 			ModTranslation name = CreateMapEntryName();
 			name.SetDefault("Realm Altar");
 			AddMapEntry(new Color(200, 200, 200), name);
-			dustType = DustID.Gold;
-			drop = ModContent.ItemType<Items.RealmAltarItem>();
+			DustType = DustID.Gold;
+			ItemDrop = ModContent.ItemType<Items.RealmAltarItem>();
 
 
 			TileObjectData.newTile.CopyFrom(TileObjectData.Style2x2);
@@ -53,14 +53,14 @@ namespace Realms.Tiles
 			TileObjectData.addTile(Type);
 
 			//drop = todo;
-			minPick = 200;
+			MinPick = 200;
 		}
 
-		public override bool NewRightClick(int i, int j)
+		public override bool RightClick(int i, int j)
 		{
 			Tile tile = Main.tile[i, j];
-			int left = i - tile.frameX / 18;
-			int top = j - tile.frameY / 18;
+			int left = i - tile.TileFrameX / 18;
+			int top = j - tile.TileFrameY / 18;
 
 			int index = ModContent.GetInstance<AltarEntity>().Find(left, top);
 			if (index == -1)
@@ -80,7 +80,7 @@ namespace Realms.Tiles
 
 		public override void NumDust(int i, int j, bool fail, ref int num) => num = 1;
 		public override bool Drop(int i, int j) => false;
-		public override void KillMultiTile(int i, int j, int frameX, int frameY) => Item.NewItem(new Vector2(i, j) * 16, new Vector2(5, 3) * 16, drop);//change here if size change
+		public override void KillMultiTile(int i, int j, int frameX, int frameY) => Item.NewItem(new Vector2(i, j) * 16, new Vector2(5, 3) * 16, ItemDrop);//change here if size change
 
     }
 
@@ -121,8 +121,8 @@ namespace Realms.Tiles
 			Lighting.AddLight(centerPos * 16, 0.25f, 0.4f, 0.25f);
 
 			Model model0 = GetModel("Realms/Models/sphere");
-			model0.SetTexture(ModContent.GetTexture("Realms/Models/sphere_tex_png"));
-			model0.EmissiveColor(Color.White);
+			model0.BESetTexture(ModContent.GetTexture("Realms/Models/sphere_tex_png"));
+			model0.BEEmissiveColor(Color.White);
 			model0.Draw((pos * 16), (float)(Math.Sin((float)Main.GameUpdateCount / 65 + Position.Y) + 9) * 1.2f, (float)Main.GameUpdateCount / 50, (float)Main.GameUpdateCount / 63, (float)Main.GameUpdateCount / 300, true);
 
 			Model model = GetModel("Realms/Models/altar");
@@ -166,14 +166,14 @@ namespace Realms.Tiles
         //	(effect as BasicNormalEffect).AmbientColor.SetValue(new Vector4(Color.Red.ToVector3(), 1));
         //}
 
-        public override TagCompound Save()
+        public override void SaveData(TagCompound tag)/* tModPorter Suggestion: Edit tag parameter instead of returning new TagCompound */
         {
-            return base.Save();
+            return base.SaveData();
         }
 
-        public override void Load(TagCompound tag)
+        public override void LoadData(TagCompound tag)
         {
-            base.Load(tag);
+            base.LoadData(tag);
         }
 
         protected override int ValidTileType => ModContent.TileType<RealmAltar>();

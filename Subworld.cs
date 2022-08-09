@@ -1,7 +1,6 @@
 using Terraria.ModLoader;
 using SubworldLibrary;
 using System;
-using Terraria.World.Generation;
 using System.Collections.Generic;
 using Terraria.Utilities;
 using Terraria;
@@ -12,6 +11,7 @@ using Realms.RealmData;
 using Microsoft.Xna.Framework.Graphics;
 using System.IO;
 using System.Linq;
+using Terraria.WorldBuilding;
 
 namespace Realms
 {
@@ -107,17 +107,17 @@ namespace Realms
         public static bool DebugNoSave = false;
     }
 
-    public class SubworldWorld : ModWorld
+    public class SubworldWorld : ModSystem
     {
 
-        public override void PreUpdate()
+        public override void PreUpdateWorld()
         {
             if (activeRealm != null)
                 foreach (RealmEffect realmEffect in activeRealm.realmEffectList)
                     realmEffect.Update();
         }
 
-        public override void Initialize()
+        public override void OnWorldLoad()/* tModPorter Suggestion: Also override OnWorldUnload, and mirror your worldgen-sensitive data initialization in PreWorldGen */
         {
             UIHandler.ActiveUIList.Clear();
 

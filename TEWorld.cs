@@ -12,16 +12,16 @@ using System;
 using System.Reflection;
 using System.Reflection.Emit;
 using Terraria.GameContent.Generation;
-using Terraria.World.Generation;
 using SubworldLibrary;
 using Terraria.Graphics;
 using Realms;
 using Terraria.ModLoader.IO;
 using Realms.Effects;
+using Terraria.WorldBuilding;
 
 namespace Realms
 {
-    public class TEWorld : ModWorld
+    public class TEWorld : ModSystem
     {
         /// <summary>
         /// Allows TEs to draw: step one extend from interface, step two add draw method, step three enjoy
@@ -33,7 +33,7 @@ namespace Realms
 
         public static List<IDrawableTE> TEBuffer;
 
-        public override void PreUpdate()
+        public override void PreUpdateWorld()
         {
             TEBuffer = new List<IDrawableTE>();
 
@@ -62,10 +62,10 @@ namespace Realms
     /// </summary>
     public abstract class SimpleEntity : ModTileEntity
     {
-        public override bool ValidTile(int i, int j)
+        public override bool IsTileValidForEntity(int i, int j)
         {
             Tile tile = Main.tile[i, j];
-            return tile.active() && tile.type == ValidTileType && tile.frameX == 0 && tile.frameY == 0;
+            return tile.HasTile && tile.TileType == ValidTileType && tile.TileFrameX == 0 && tile.TileFrameY == 0;
         }
 
         protected abstract int ValidTileType { get; }

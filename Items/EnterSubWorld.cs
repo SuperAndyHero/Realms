@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Terraria;
 using Terraria.ModLoader;
-using Terraria.World.Generation;
 using Microsoft.Xna.Framework;
 using Terraria.DataStructures;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.Graphics.Effects;
 using SubworldLibrary;
 using static Realms.ContentHandler;
+using Terraria.WorldBuilding;
 
 namespace Realms.Items
 {
@@ -24,33 +24,33 @@ namespace Realms.Items
 
         public override void SetDefaults()
         {
-            item.width = 18;
-            item.height = 18;
-            item.rare = 2;
-            item.useTime = 20;
-            item.useAnimation = 20;
-            item.useStyle = 4;
+            Item.width = 18;
+            Item.height = 18;
+            Item.rare = 2;
+            Item.useTime = 20;
+            Item.useAnimation = 20;
+            Item.useStyle = 4;
             //GetModel("Realms/Models/Sans").SetTexture("Realms/Models/Sans Tex");
         }
 
         public override void PostDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
         {
             Model model = GetModel("Realms/Models/LargeAsteroid_flat");
-            model.SetModTexture("Realms/Models/AsteroidTexture");
+            model.BESetModTexture("Realms/Models/AsteroidTexture");
             //Model model = GetModel("Realms/Models/altar_smooth");
             //model.SetModTexture("Realms/Models/altar");
-            model.LightingSetting(true, true);
-            model.Specular(10);
-            model.SetAlpha(0.5f);
+            model.BELightingSetting(true, true);
+            model.BESpecular(10);
+            model.BESetAlpha(0.5f);
 
             Vector3 dir = ModelHandler.LightingDirection(Main.LocalPlayer.Center / 16, out Vector3 averageColor, 4, 8, 0.5f);
-            model.AmbientColor(averageColor * 0.25f);
-            model.DirectionalLight0(true, dir, averageColor / 4, averageColor);
+            model.BEAmbientColor(averageColor * 0.25f);
+            model.BEDirectionalLight0(true, dir, averageColor / 4, averageColor);
             model.Draw(Main.LocalPlayer.Center + new Vector2(0, Main.LocalPlayer.gfxOffY), 50f, (float)Main.GameUpdateCount / 50, (float)Main.GameUpdateCount / 67, 0, false);
             //model.DrawBoundingBox(spriteBatch, Main.LocalPlayer.Center + new Vector2(0, Main.LocalPlayer.gfxOffY), Color.Purple * 0.25f, 50);
         }
 
-        public override bool UseItem(Player player)
+        public override bool? UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */
         {
             //TeleportHandler.InitiateTeleportEvent();
             Realms.testUI.Deactivate();

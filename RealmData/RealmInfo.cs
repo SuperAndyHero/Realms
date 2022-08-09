@@ -1,7 +1,6 @@
 using Terraria.ModLoader;
 using SubworldLibrary;
 using System;
-using Terraria.World.Generation;
 using System.Collections.Generic;
 using Terraria.Utilities;
 using Terraria;
@@ -14,6 +13,7 @@ using Microsoft.Xna.Framework;
 using Terraria.DataStructures;
 using System.Text;
 using System.IO;
+using Terraria.WorldBuilding;
 
 namespace Realms.RealmData
 {

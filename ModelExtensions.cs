@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using System.IO;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.ModLoader;
 using Terraria.Graphics.Effects;
 using System;
@@ -14,7 +15,7 @@ namespace Realms
 	public static class RealmExtensions
 	{
         #region basicEffect methods
-        public static void SetTexture(this Model model, Texture2D texture)
+        public static void BESetTexture(this Model model, Texture2D texture)
 		{
 			foreach (ModelMesh mesh in model.Meshes)
 				foreach (BasicEffect effect in mesh.Effects)
@@ -23,21 +24,21 @@ namespace Realms
 					effect.Texture = texture;
 				}
 		}
-		public static void SetXnaTexture(this Model model, string texture) =>
-			SetTexture(model, ContentHandler.GetXnaTexture(texture));
-		public static void SetModTexture(this Model model, string texture) =>
-			SetTexture(model, ModContent.GetTexture(texture));
+		public static void BESetXnaTexture(this Model model, string texture) =>
+			BESetTexture(model, ContentHandler.GetXnaTexture(texture));
+		public static void BESetModTexture(this Model model, string texture) =>
+			BESetTexture(model, ModContent.GetTexture(texture));
 
-		public static void SetAlpha(this Model model, float alpha)
+		public static void BESetAlpha(this Model model, float alpha)
 		{
 			foreach (ModelMesh mesh in model.Meshes)
 				foreach (BasicEffect effect in mesh.Effects)
 					effect.Alpha = alpha;
 		}
 
-		public static void DirectionalLight0(this Model model, bool enabled, Vector3 direction, Color diffuseColor = default, Color specularColor = default) =>
-			DirectionalLight0(model, enabled, direction, diffuseColor.ToVector3(), specularColor.ToVector3());
-		public static void DirectionalLight0(this Model model, bool enabled, Vector3 direction = default, Vector3 diffuseColor = default, Vector3 specularColor = default)
+		public static void BEDirectionalLight0(this Model model, bool enabled, Vector3 direction, Color diffuseColor = default, Color specularColor = default) =>
+			BEDirectionalLight0(model, enabled, direction, diffuseColor.ToVector3(), specularColor.ToVector3());
+		public static void BEDirectionalLight0(this Model model, bool enabled, Vector3 direction = default, Vector3 diffuseColor = default, Vector3 specularColor = default)
 		{
 			foreach (ModelMesh mesh in model.Meshes)
 				foreach (BasicEffect effect in mesh.Effects)
@@ -49,9 +50,9 @@ namespace Realms
 				}
 		}
 
-		public static void DirectionalLight1(this Model model, bool enabled, Vector3 direction, Color diffuseColor = default, Color specularColor = default) =>
-			DirectionalLight1(model, enabled, direction, diffuseColor.ToVector3(), specularColor.ToVector3());
-		public static void DirectionalLight1(this Model model, bool enabled, Vector3 direction = default, Vector3 diffuseColor = default, Vector3 specularColor = default)
+		public static void BEDirectionalLight1(this Model model, bool enabled, Vector3 direction, Color diffuseColor = default, Color specularColor = default) =>
+			BEDirectionalLight1(model, enabled, direction, diffuseColor.ToVector3(), specularColor.ToVector3());
+		public static void BEDirectionalLight1(this Model model, bool enabled, Vector3 direction = default, Vector3 diffuseColor = default, Vector3 specularColor = default)
 		{
 			foreach (ModelMesh mesh in model.Meshes)
 				foreach (BasicEffect effect in mesh.Effects)
@@ -63,9 +64,9 @@ namespace Realms
 				}
 		}
 
-		public static void DirectionalLight2(this Model model, bool enabled, Vector3 direction, Color diffuseColor = default, Color specularColor = default) =>
-			DirectionalLight2(model, enabled, direction, diffuseColor.ToVector3(), specularColor.ToVector3());
-		public static void DirectionalLight2(this Model model, bool enabled, Vector3 direction = default, Vector3 diffuseColor = default, Vector3 specularColor = default)
+		public static void BEDirectionalLight2(this Model model, bool enabled, Vector3 direction, Color diffuseColor = default, Color specularColor = default) =>
+			BEDirectionalLight2(model, enabled, direction, diffuseColor.ToVector3(), specularColor.ToVector3());
+		public static void BEDirectionalLight2(this Model model, bool enabled, Vector3 direction = default, Vector3 diffuseColor = default, Vector3 specularColor = default)
 		{
 			foreach (ModelMesh mesh in model.Meshes)
 				foreach (BasicEffect effect in mesh.Effects)
@@ -77,38 +78,38 @@ namespace Realms
 				}
 		}
 
-		public static void AmbientColor(this Model model, Color ambient) =>
-			AmbientColor(model, ambient.ToVector3());
-		public static void AmbientColor(this Model model, Vector3 ambient)
+		public static void BEAmbientColor(this Model model, Color ambient) =>
+			BEAmbientColor(model, ambient.ToVector3());
+		public static void BEAmbientColor(this Model model, Vector3 ambient)
 		{
 			foreach (ModelMesh mesh in model.Meshes)
 				foreach (BasicEffect effect in mesh.Effects)
 					effect.AmbientLightColor = ambient;
 		}
 
-		public static void DiffuseColor(this Model model, Color diffuse = default) =>
-			DiffuseColor(model, diffuse.ToVector3());
-		public static void DiffuseColor(this Model model, Vector3 diffuse = default)
+		public static void BEDiffuseColor(this Model model, Color diffuse = default) =>
+			BEDiffuseColor(model, diffuse.ToVector3());
+		public static void BEDiffuseColor(this Model model, Vector3 diffuse = default)
 		{
 			foreach (ModelMesh mesh in model.Meshes)
 				foreach (BasicEffect effect in mesh.Effects)
 					effect.DiffuseColor = diffuse;
 		}
 
-		public static void EmissiveColor(this Model model, Color emissive = default) =>
-			EmissiveColor(model, emissive.ToVector3());
-		public static void EmissiveColor(this Model model, Vector3 emissive = default)
+		public static void BEEmissiveColor(this Model model, Color emissive = default) =>
+			BEEmissiveColor(model, emissive.ToVector3());
+		public static void BEEmissiveColor(this Model model, Vector3 emissive = default)
 		{
 			foreach (ModelMesh mesh in model.Meshes)
 				foreach (BasicEffect effect in mesh.Effects)
 					effect.EmissiveColor = emissive;
 		}
 
-		public static void Specular(this Model model, float power) =>
-			Specular(model, power, Vector3.One);
-		public static void Specular(this Model model, float power, Color filterColor) =>
-			Specular(model, power, filterColor.ToVector3());
-		public static void Specular(this Model model, float power, Vector3 filterColor)
+		public static void BESpecular(this Model model, float power) =>
+			BESpecular(model, power, Vector3.One);
+		public static void BESpecular(this Model model, float power, Color filterColor) =>
+			BESpecular(model, power, filterColor.ToVector3());
+		public static void BESpecular(this Model model, float power, Vector3 filterColor)
 		{
 			foreach (ModelMesh mesh in model.Meshes)
 				foreach (BasicEffect effect in mesh.Effects)
@@ -119,7 +120,7 @@ namespace Realms
 		}
 
 
-		public static void LightingSetting(this Model model, bool lightingEnabled = true, bool perPixelLighting = false, bool setDefaultLight = false)
+		public static void BELightingSetting(this Model model, bool lightingEnabled = true, bool perPixelLighting = false, bool setDefaultLight = false)
 		{
 			foreach (ModelMesh mesh in model.Meshes)
 				foreach (BasicEffect effect in mesh.Effects)
@@ -155,7 +156,7 @@ namespace Realms
 			{
 				Vector3 size = new Vector3(new Vector2(mesh.BoundingSphere.Radius) * Main.GameViewMatrix.Zoom * scale, 0);
 				Vector3 topLeft = ((new Vector3(position, 0) - (mesh.BoundingSphere.Center * size)) - new Vector3(size.X, -size.Y, 0)) - new Vector3(Main.screenPosition, 0);
-				spriteBatch.Draw(Main.blackTileTexture, new Rectangle((int)topLeft.X, (int)topLeft.Y, (int)size.X * 2, (int)size.Y * 2), color);
+				spriteBatch.Draw(TextureAssets.BlackTile.Value, new Rectangle((int)topLeft.X, (int)topLeft.Y, (int)size.X * 2, (int)size.Y * 2), color);
 			}
 		}
 

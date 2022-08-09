@@ -6,7 +6,6 @@ using Terraria;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
-using Terraria.World.Generation;
 using Microsoft.Xna.Framework;
 using Terraria.GameContent.Generation;
 using Terraria.ModLoader.IO;
@@ -17,6 +16,7 @@ using Terraria.UI;
 using Terraria.Graphics.Effects;
 using SubworldLibrary;
 using static Realms.SubworldHandler;
+using Terraria.WorldBuilding;
 
 namespace Realms.Items
 {
@@ -30,15 +30,15 @@ namespace Realms.Items
 
         public override void SetDefaults()
         {
-            item.width = 18;
-            item.height = 18;
-            item.rare = 2;
-            item.useTime = 20;
-            item.useAnimation = 20;
-            item.useStyle = 4;
+            Item.width = 18;
+            Item.height = 18;
+            Item.rare = 2;
+            Item.useTime = 20;
+            Item.useAnimation = 20;
+            Item.useStyle = 4;
         }
 
-        public override bool UseItem(Player player)
+        public override bool? UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */
         {
             return true;
         }

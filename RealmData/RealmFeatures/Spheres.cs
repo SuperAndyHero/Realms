@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Terraria;
 using Terraria.DataStructures;
-using Terraria.World.Generation;
+using Terraria.WorldBuilding;
 
 namespace Realms.RealmData.RealmFeatures
 {

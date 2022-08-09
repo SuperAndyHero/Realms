@@ -22,8 +22,11 @@ namespace Realms
 
 		public static Dictionary<string, object> assetCache = new Dictionary<string, object>();
 
-		public static void Load(string xnbExtension = ".xnc")
+		public static void Load(string xnbExtension = ".xnc")//extension name option since tml refuses to compile mods with a model xnb file in them.
 		{
+			//This took a lot of poking around in both TML's and XNA's loading to get this to work
+			//This was then narrowed down to the minimal reflection needed
+
 			extension = xnbExtension;
 			//We grab info about a internal method in the xna framework
 			createContentReader_Info = typeof(ContentReader).GetMethod("Create", BindingFlags.NonPublic | BindingFlags.Static);
